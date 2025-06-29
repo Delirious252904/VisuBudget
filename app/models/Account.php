@@ -17,7 +17,7 @@ class Account {
     }
     
     public function findAllByUserId($user_id) {
-        $stmt = $this->db->prepare("SELECT * FROM accounts WHERE user_id = ? ORDER BY acocunt_name ASC");
+        $stmt = $this->db->prepare("SELECT * FROM accounts WHERE user_id = ? ORDER BY account_name ASC");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll();
     }
