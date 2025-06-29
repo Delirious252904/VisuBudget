@@ -49,7 +49,7 @@ class Account {
     public function getCurrentTotalBalanceByUserId($user_id) {
         $stmt = $this->db->prepare("
             SELECT 
-                (SELECT IFNULL(SUM(balance), 0) FROM accounts WHERE user_id = :user_id1) +
+                (SELECT IFNULL(SUM(current_balance), 0) FROM accounts WHERE user_id = :user_id1) +
                 (SELECT IFNULL(SUM(CASE 
                                     WHEN type = 'income' THEN amount 
                                     WHEN type = 'expense' THEN -amount
