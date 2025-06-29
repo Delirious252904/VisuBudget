@@ -230,4 +230,65 @@ class RecurringRule {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    /**
+     * NEW: Calculates the sum of monthly recurring income and expenses for a given account.
+     * This helps users see their regular cash flow at a glance.
+     *
+     * @param int $account_id The ID of the account.
+     * @return array An associative array with 'income' and 'expenses' totals.
+     */
+    public function getMonthlyTotalsForAccount($account_id) {
+        $totals = [
+            'income' => 0,
+            'expenses' => 0,
+        ];
+
+        // --- Calculate total recurring INCOME for this account ---
+        // Sums rules where the 'to_account_id' matches this account.
+        $stmt_income = $this->db->prepare(
+            "SELECT SUM(amount) as total 
+             FROM recurring_rules 
+             WHERE to_account_id = ? 
+             AND type = 'income' 
+             AND (end_date IS NULL OR end_date >= CURDATE())"
+        );
+        $stmt_income->execute([$account_id]);
+        $result_income = $stmt_income->fetch();
+        if ($result_income && $result_income['total']) {
+            $totals['income'] = (float) $result_income['total'];
+        }
+
+        // --- Calculate total recurring EXPENSES for this account ---
+        // Sums rules where the 'from_account_id' matches this account.
+        $stmt_expenses = $this->db->prepare(
+            "SELECT SUM(amount) as total 
+             FROM recurring_rules 
+             WHERE from_account_id = ? 
+             AND type = 'expense' 
+             AND (end_date IS NULL OR end_date >= CURDATE())"
+        );
+        $stmt_expenses->execute([$account_id]);
+        $result_expenses = $stmt_expenses->fetch();
+        if ($result_expenses && $result_expenses['total']) {
+            $totals['expenses'] = (float) $result_expenses['total'];
+        }
+        
+        // --- Calculate total recurring TRANSFERS out of this account ---
+        $stmt_transfers = $this->db->prepare(
+            "SELECT SUM(amount) as total 
+             FROM recurring_rules 
+             WHERE from_account_id = ? 
+             AND type = 'transfer' 
+             AND (end_date IS NULL OR end_date >= CURDATE())"
+        );
+        $stmt_transfers->execute([$account_id]);
+        $result_transfers = $stmt_transfers->fetch();
+        if ($result_transfers && $result_transfers['total']) {
+            $totals['expenses'] += (float) $result_transfers['total'];
+        }
+
+
+        return $totals;
+    }
 }

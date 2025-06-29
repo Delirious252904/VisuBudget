@@ -4,6 +4,7 @@ namespace controllers;
 
 use models\Account;
 use models\Transaction;
+use models\RecurringRule;
 
 // It now extends ViewController so it can render pages and get the user ID
 class AccountController extends ViewController {
@@ -12,10 +13,22 @@ class AccountController extends ViewController {
      * Shows a list of all accounts for the user.
      */
     public function showList() {
-        $user_id = $this->getUserId();
         $accountModel = new Account();
-        $accounts = $accountModel->findAllByUserId($user_id);
-        $this->render('accounts/index', ['accounts' => $accounts]);
+        $ruleModel = new RecurringRule(); // Instantiate the model
+        
+        // Get all accounts with their current balances
+        $accounts = $accountModel->findAllByUserIdWithCurrentBalances($user_id);
+        
+        // --- NEW: Loop through accounts to get their recurring totals ---
+        foreach ($accounts as $key => $account) {
+            $totals = $ruleModel->getMonthlyTotalsForAccount($account['account_id']);
+            $accounts[$key]['recurring_income'] = $totals['income'];
+            $accounts[$key]['recurring_expenses'] = $totals['expenses'];
+        }
+
+        \Flight::render('accounts/index', [
+            'accounts' => $accounts
+        ]);
     }
 
     /**
