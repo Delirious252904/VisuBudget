@@ -167,3 +167,36 @@ function setupMobileMenu() {
         }
     });
 }
+
+/**
+ * Handles highlighting and scrolling to elements linked via a URL hash.
+ * e.g., /transactions#transaction-123
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if the URL has a hash (e.g., #account-5)
+    if (window.location.hash) {
+        try {
+            // Find the element with the ID that matches the hash
+            const elementToHighlight = document.querySelector(window.location.hash);
+
+            if (elementToHighlight) {
+                // 1. Scroll the element into the middle of the view
+                elementToHighlight.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+
+                // 2. Add the highlight class to apply our CSS style
+                elementToHighlight.classList.add('highlight-item');
+
+                // 3. Remove the highlight class after 2.5 seconds so the effect is temporary
+                setTimeout(() => {
+                    elementToHighlight.classList.remove('highlight-item');
+                }, 2500);
+            }
+        } catch (e) {
+            // If the hash is not a valid element ID, do nothing.
+            console.warn('Could not highlight element for hash:', window.location.hash);
+        }
+    }
+});

@@ -89,3 +89,18 @@ section {
 #confirmation-modal.hidden {
     display: none;
 }
+
+/*
+ * Highlight style for items linked from the dashboard.
+ * Provides a temporary visual cue to the user.
+*/
+.highlight-item {
+    /* The !important tag helps ensure this style overrides existing background colors */
+    background-color: #2563eb !important; 
+    
+    /* A subtle border to make it stand out */
+    border: 2px solid #60a5fa;
+    
+    /* Smoothly transition back to the original style when the class is removed */
+    transition: background-color 1s ease-out, border-color 1s ease-out;
+}
