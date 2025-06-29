@@ -48,7 +48,7 @@ class ViewController {
             return;
         }
 
-        // --- Upcoming Events Logic (FIXED) ---
+        // --- Upcoming Events Logic ---
         $upcomingEvents = [];
         $realTransactions = $transactionModel->findUpcomingByUserId($user_id);
         foreach ($realTransactions as $tx) {
@@ -60,7 +60,7 @@ class ViewController {
             $nextDueDate = RecurringRule::calculateNextDueDate($rule);
             if ($nextDueDate) {
                 $event = [
-                    'transaction_id' => 'rule_' . $rule['rule_id'], // Synthetic ID for linking
+                    'transaction_id' => 'rule_' . $rule['rule_id'],
                     'transaction_date' => $nextDueDate->format('Y-m-d'),
                     'description' => $rule['description'],
                     'amount' => $rule['amount'],
@@ -72,8 +72,9 @@ class ViewController {
         uasort($upcomingEvents, function($a, $b) { return strtotime($a['transaction_date']) <=> strtotime($b['transaction_date']); });
         $upcomingTransactionsForDisplay = array_slice($upcomingEvents, 0, 5);
         
-        // --- Safe to Spend Logic (RESTORED) ---
-        $totalBalance = $accountModel->getTotalBalanceByUserId($user_id);
+        // --- Safe to Spend Logic (FIXED) ---
+        // FIX: Use the new method that only calculates balance up to today.
+        $totalBalance = $accountModel->getCurrentTotalBalanceByUserId($user_id);
         $nextIncomeEvent = $transactionModel->findNextIncomeEvent($user_id);
         
         $safeToSpendMessage = "";
@@ -122,7 +123,8 @@ class ViewController {
             'nextIncomeMessage' => $nextIncomeMessage,
             'dailyAllowanceMessage' => $dailyAllowanceMessage,
             'savingsMessage' => $savingsMessage,
-            'accounts' => $accountModel->findAllByUserIdWithBalances($user_id),
+            // FIX: Use the new method to get current balances for the account list.
+            'accounts' => $accountModel->findAllByUserIdWithCurrentBalances($user_id),
             'upcomingTransactions' => $upcomingTransactionsForDisplay,
             'expenseChartData' => $transactionModel->getDailyExpensesForChart($user_id),
             'topSavingsGoals' => ($user['subscription_tier'] === 'premium') ? $goalModel->findTopGoalsByUserId($user_id, 3) : [],
