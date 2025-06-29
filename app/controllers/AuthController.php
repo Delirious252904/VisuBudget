@@ -6,48 +6,51 @@ use models\User;
 use core\Mailer;
 use Firebase\JWT\JWT;
 
-// This class now extends ViewController to gain access to the renderPublic() method.
 class AuthController extends ViewController {
 
     /**
      * Shows the registration form, but only if the user has a valid access source.
-     * This is the core of your controlled beta logic.
      */
     public function showRegisterForm() {
-        // 1. Check for a special query parameter in the URL, like '/register?from=twa'.
         $source = \Flight::request()->query['from'] ?? null;
-
-        // 2. Define which sources are allowed to see the registration page.
         $allowed_sources = ['twa', 'invite'];
 
-        // 3. If the user's source is in our allowed list, show them the form.
         if (in_array($source, $allowed_sources)) {
             $this->renderPublic('register/index');
         } else {
-            // 4. If they don't have a valid source (e.g., they just typed '/register' in the browser),
-            // send them back to the main landing page.
+            \Flight::flash('info', 'VisuBudget is currently in a closed beta. Please request access below.');
             \Flight::redirect('/#request-access');
         }
     }
 
     /**
      * Handles the registration form submission.
+     * CORRECTED: Now passes the 'name' field to the User model.
      */
     public function register() {
         $request = \Flight::request();
+        $name = $request->data['name']; // Use 'name' to match the form and DB
         $email = $request->data['email'];
         $password = $request->data['password'];
 
-        if (empty($email) || empty($password) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->renderPublic('register/index', ['error' => 'Invalid email or password.']);
+        if (empty($name) || empty($email) || empty($password) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->renderPublic('register/index', ['error' => 'All fields are required.']);
             return;
         }
 
         $userModel = new User();
-        $token = $userModel->create($email, $password);
+        
+        // Check if user already exists
+        if ($userModel->findByEmail($email)) {
+            $this->renderPublic('register/index', ['error' => 'This email address is already in use.']);
+            return;
+        }
+        
+        // Pass all required parameters to the corrected create method
+        $token = $userModel->create($name, $email, $password);
 
         if (!$token) {
-            $this->renderPublic('register/index', ['error' => 'This email address is already in use.']);
+            $this->renderPublic('register/index', ['error' => 'Could not create account. Please try again.']);
             return;
         }
 
@@ -62,7 +65,14 @@ class AuthController extends ViewController {
                 'link_text' => 'Go to Login'
             ]);
         } else {
-            $this->renderPublic('register/index', ['error' => 'Could not send verification email. Please try again later.']);
+            // Log this error for your own debugging
+            error_log("Failed to send verification email to: " . $email);
+            $this->renderPublic('auth/message', [
+                'title' => 'Registration Successful!',
+                'message' => 'Your account was created, but we couldn\'t send the verification email. Please contact support to activate your account.',
+                'link_href' => '/login',
+                'link_text' => 'Go to Login'
+            ]);
         }
     }
 
@@ -75,7 +85,7 @@ class AuthController extends ViewController {
 
     /**
      * Handles the login form submission.
-     * This version can now detect unverified accounts.
+     * This version is fully synchronized with the User model and DB schema.
      */
     public function login() {
         $request = \Flight::request();
@@ -86,24 +96,23 @@ class AuthController extends ViewController {
         $user = $userModel->verifyCredentials($email, $password);
 
         if (!$user) {
-            // This means the email was not found or the password was incorrect.
+            \Flight::flash('danger', 'Invalid login credentials.');
             $this->renderPublic('login/index', ['error' => 'Invalid login credentials.']);
             return;
         }
 
-        // The credentials were correct. Now we check if the account is verified.
         if (!$user['is_verified']) {
             $this->renderPublic('login/index', [
                 'error' => 'Your account is not verified. Please check your email.',
-                'show_resend' => true, // This flag tells the view to show the resend button
-                'email' => $email // We pass the email back to the view
+                'show_resend' => true,
+                'email' => $email
             ]);
             return;
         }
 
-        // --- JWT CREATION on Successful Login ---
+        // --- JWT CREATION with correct payload ---
         $issuedAt = time();
-        $expire = $issuedAt + JWT_EXPIRATION_TIME;
+        $expire = $issuedAt + (60*60*24*30); // 30 days
 
         $payload = [
             'iss' => $_ENV['APP_URL'],
@@ -111,8 +120,9 @@ class AuthController extends ViewController {
             'iat' => $issuedAt,
             'exp' => $expire,
             'data' => [
-                'user_id' => $user['user_id'],
-                'email' => $user['email']
+                'user_id' => $user['user_id'], // Uses the correct 'user_id'
+                'email' => $user['email'],
+                'role' => $user['role']       // Includes the 'role'
             ]
         ];
         $jwt = JWT::encode($payload, $_ENV['JWT_SECRET_KEY'], 'HS256');
@@ -121,7 +131,13 @@ class AuthController extends ViewController {
             'expires' => $expire, 'path' => '/', 'domain' => '',
             'secure' => true, 'httponly' => true, 'samesite' => 'Lax'
         ]);
-        \Flight::redirect('/');
+        
+        // Redirect based on role after successful login
+        if ($user['role'] === 'admin') {
+            \Flight::redirect('/admin/dashboard');
+        } else {
+            \Flight::redirect('/dashboard');
+        }
     }
 
     /**
@@ -150,7 +166,6 @@ class AuthController extends ViewController {
 
     /**
      * Verifies a user's account from the email link.
-     * This is the final, non-debug version.
      */
     public function verify() {
         $token = \Flight::request()->query['token'];
@@ -159,23 +174,19 @@ class AuthController extends ViewController {
              return;
         }
 
-        $userModel = new \models\User();
+        $userModel = new User();
         $user = $userModel->findByVerificationToken($token);
 
-        // Check if the token is valid and not expired
         if (!$user || new \DateTime() > new \DateTime($user['token_expires_at'])) {
             $this->renderPublic('auth/message', ['title' => 'Invalid Link', 'message' => 'This verification link is invalid or has expired.']);
             return;
         }
 
-        // Try to activate the account and check the result
         $success = $userModel->activateAccount($user['user_id']);
 
         if ($success) {
-            // It worked! Show the login page with a success message.
             $this->renderPublic('login/index', ['success' => 'Your account has been verified! You can now log in.']);
         } else {
-            // The database update failed for some reason.
             $this->renderPublic('auth/message', [
                 'title' => 'Activation Failed', 
                 'message' => 'We could not activate your account at this time. Please try again later or contact support.'
@@ -183,19 +194,10 @@ class AuthController extends ViewController {
         }
     }
     
-    /**
-     * Shows the 'forgot password' form.
-     * Corresponds to: GET /forgot-password
-     */
     public function showForgotPasswordForm() {
         $this->renderPublic('forgot-password/index');
     }
 
-    /**
-     * Handles the submission of the 'forgot password' form.
-     * Renamed from handleForgotPassword to match your route.
-     * Corresponds to: POST /forgot-password
-     */
     public function forgot() {
         $email = \Flight::request()->data['email'];
         $userModel = new User();
@@ -217,10 +219,6 @@ class AuthController extends ViewController {
         ]);
     }
 
-    /**
-     * Shows the 'reset password' form if the token is valid.
-     * Corresponds to: GET /reset-password
-     */
     public function showResetPasswordForm() {
         $token = \Flight::request()->query['token'];
         $userModel = new User();
@@ -234,11 +232,6 @@ class AuthController extends ViewController {
         $this->renderPublic('reset-password/index', ['token' => $token]);
     }
 
-    /**
-     * Handles the submission of the new password.
-     * Renamed from handleResetPassword to match your route.
-     * Corresponds to: POST /reset-password
-     */
     public function reset() {
         $token = \Flight::request()->data['token'];
         $password = \Flight::request()->data['password'];
@@ -262,9 +255,6 @@ class AuthController extends ViewController {
         $this->renderPublic('login/index', ['success' => 'Your password has been updated successfully! You can now log in.']);
     }
     
-    /**
-     * Logs the user out by clearing the cookie.
-     */
     public function logout() {
         setcookie('auth_token', '', time() - 3600, '/');
         \Flight::redirect('/login');

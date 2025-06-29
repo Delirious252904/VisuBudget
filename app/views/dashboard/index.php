@@ -1,14 +1,11 @@
 <!-- app/views/dashboard/index.php -->
 
 <!-- Main "Safe to Spend" Section -->
+<!-- Main "Safe to Spend" Section -->
 <section class="text-center mb-8 p-6 bg-gray-800 rounded-lg shadow-lg">
-    <!-- 
-        We now get just the first name for a warmer, more personal greeting.
-    -->
     <h2 class="text-2xl font-bold mb-2">
         Hello <?php 
             if (isset($user['name']) && !empty($user['name'])) {
-                // Split the full name by spaces and take the first part
                 $firstName = explode(' ', $user['name'])[0];
                 echo htmlspecialchars($firstName);
             } else {
@@ -19,16 +16,10 @@
     
     <?php echo $safeToSpendMessage; ?>
         
-    <!-- 
-        We now display the new, detailed income message from the controller.
-    -->
     <p class="text-sm text-gray-500 mt-2">
         <?php echo htmlspecialchars($nextIncomeMessage); ?>
     </p>
 
-    <!-- 
-        We display the new daily allowance message, but only if it exists.
-    -->
     <?php if (isset($dailyAllowanceMessage)): ?>
     <div class="mt-4 pt-4 border-t border-gray-700">
         <p class="text-lg font-bold text-blue-300">
@@ -42,7 +33,7 @@
     <div class="mt-4 pt-4 border-t border-gray-700 bg-green-900/50 rounded-b-lg -mx-6 -mb-6 px-6 py-4">
         <p class="text-lg font-semibold text-green-300">
             <i class="fas fa-piggy-bank mr-2"></i>
-            <?php echo $savingsMessage; // This message contains HTML (<strong> tags), so we echo it directly ?>
+            <?php echo $savingsMessage; ?>
         </p>
     </div>
     <?php endif; ?>
@@ -112,18 +103,19 @@
                      <p class="text-gray-400 text-center">No accounts found. Add one to get started!</p>
                 <?php else: ?>
                     <?php foreach ($accounts as $account): ?>
-                        <div class="flex justify-between items-center p-4 bg-gray-700 rounded-md">
-                            <div>
-                                <p class="font-semibold"><?php echo htmlspecialchars($account['account_name']); ?></p>
-                                <p class="text-sm text-gray-400">Current Balance</p>
+                        <!-- MODIFIED: The div is now a clickable link -->
+                        <a href="/accounts#account-<?php echo $account['account_id']; ?>" class="block p-4 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors duration-200">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold"><?php echo htmlspecialchars($account['account_name']); ?></p>
+                                    <p class="text-sm text-gray-400">Current Balance</p>
+                                </div>
+                                <p class="text-lg font-bold">£<?php echo number_format($account['current_balance'], 2); ?></p>
                             </div>
-                            <p class="text-lg font-bold">£<?php echo number_format($account['current_balance'], 2); ?></p>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
-
-            <!-- Add Account Button -->
             <div class="flex justify-end items-center mt-4">
                 <a href="/account/add" class="text-sm bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">
                     <i class="fas fa-plus"></i> Add Account
@@ -132,7 +124,6 @@
                     <i class="fas fa-sliders-h"></i> Manage Accounts
                 </a>
             </div>
-
         </section>
     </div>
 
@@ -146,23 +137,26 @@
                 <?php else: ?>
                     <?php foreach ($upcomingTransactions as $tx):
                         $txDateObj = new DateTime($tx['transaction_date']); ?>
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center">
-                                <div class="text-center mr-4">
-                                    <p class="font-bold text-sm uppercase"><?php echo $txDateObj->format('M'); ?></p>
-                                    <p class="text-2xl font-bold"><?php echo $txDateObj->format('d'); ?></p>
+                        <!-- MODIFIED: The div is now a clickable link -->
+                        <a href="/transactions#transaction-<?php echo $tx['transaction_id']; ?>" class="block p-2 rounded-md hover:bg-gray-700 transition-colors duration-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="text-center mr-4">
+                                        <p class="font-bold text-sm uppercase"><?php echo $txDateObj->format('M'); ?></p>
+                                        <p class="text-2xl font-bold"><?php echo $txDateObj->format('d'); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold"><?php echo htmlspecialchars($tx['description']); ?></p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-semibold"><?php echo htmlspecialchars($tx['description']); ?></p>
-                                </div>
+                                <p class="font-bold <?php echo $tx['type'] === 'income' ? 'text-green-400' : 'text-red-400'; ?>">
+                                    £<?php echo number_format(abs($tx['amount']), 2); ?>
+                                </p>
                             </div>
-                            <p class="font-bold <?php echo $tx['type'] === 'income' ? 'text-green-400' : 'text-red-400'; ?>">
-                                £<?php echo number_format(abs($tx['amount']), 2); ?>
-                            </p>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                 <a href="/recurring" class="block text-center mt-6 text-blue-400 hover:text-blue-300 font-semibold">View all &rarr;</a>
+                 <a href="/transactions" class="block text-center mt-6 text-blue-400 hover:text-blue-300 font-semibold">View all &rarr;</a>
             </div>
         </section>
     </div>

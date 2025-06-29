@@ -2,8 +2,9 @@
 // create_admin.php
 // A one-time script to create the initial admin user.
 
-require __DIR__ . '/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+// --- 1. BOOTSTRAP and connect to DB ---
+require __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
 try {

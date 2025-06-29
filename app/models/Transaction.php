@@ -3,6 +3,7 @@
 namespace models;
 
 use models\RecurringRule;
+use PDO;
 
 class Transaction {
     protected $db;
@@ -70,15 +71,24 @@ class Transaction {
         return (float)($result['total_expenses'] ?? 0.00);
     }
 
-    public function findUpcomingByUserId($user_id, $limit = 5) {
-        $sql = "SELECT transaction_date, description, amount, type FROM transactions WHERE user_id = :user_id AND transaction_date >= CURDATE() ORDER BY transaction_date ASC LIMIT :limit";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $user_id, \PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+    /**
+     * Fetches upcoming transactions with their IDs for the dashboard.
+     */
+    public function findUpcomingByUserId($user_id, $limit = 5)
+    {
+        $stmt = $this->db->prepare("
+            SELECT transaction_id, description, transaction_date, amount, type
+            FROM transactions
+            WHERE user_id = :user_id AND transaction_date >= CURDATE()
+            ORDER BY transaction_date ASC, type DESC
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
-
+    
     /**
      * Creates a new transaction.
      * The method signature now correctly accepts both the user's ID and the form data.
@@ -213,15 +223,45 @@ class Transaction {
     }
     
     /**
-     * Finds all transactions for a user, with pagination.
+     * Fetches all transactions for a user, paginated, with correct sorting.
      */
-    public function findAllByUserIdWithPagination($user_id, $offset = 0, $limit = 25) {
-        $stmt = $this->db->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC, created_at DESC LIMIT ?, ?");
-        $stmt->bindValue(1, $user_id, \PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, \PDO::PARAM_INT);
-        $stmt->bindValue(3, $limit, \PDO::PARAM_INT);
+    public function findAllByUserIdWithPagination($user_id, $offset, $limit)
+    {
+        $stmt = $this->db->prepare("
+            SELECT t.*, a_from.name as from_account_name, a_to.name as to_account_name,
+                   CASE WHEN t.type != 'transfer' THEN COALESCE(a_from.name, a_to.name) ELSE NULL END as account_name
+            FROM transactions t
+            LEFT JOIN accounts a_from ON t.from_account_id = a_from.account_id
+            LEFT JOIN accounts a_to ON t.to_account_id = a_to.account_id
+            WHERE t.user_id = :user_id
+            ORDER BY t.transaction_date DESC, t.type DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+    
+    /**
+     * Gets the sum of future income and expenses for a specific account.
+     * This is used for the Accounts list page.
+     */
+    public function getFutureTotalsForAccount($account_id) {
+        $stmt = $this->db->prepare("
+            SELECT 
+                SUM(CASE WHEN type = 'income' AND to_account_id = :account_id THEN amount ELSE 0 END) as income,
+                SUM(CASE WHEN type = 'expense' AND from_account_id = :account_id THEN amount ELSE 0 END) as expense
+            FROM transactions
+            WHERE (from_account_id = :account_id OR to_account_id = :account_id) AND transaction_date > CURDATE()
+        ");
+        $stmt->execute([':account_id' => $account_id]);
+        $totals = $stmt->fetch();
+        return [
+            'income' => $totals['income'] ?? 0.00,
+            'expense' => $totals['expense'] ?? 0.00
+        ];
     }
 
     /**
