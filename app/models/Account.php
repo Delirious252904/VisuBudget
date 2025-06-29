@@ -2,7 +2,14 @@
 // app/models/Account.php
 namespace models;
 
-class Account extends \models\Base {
+use PDO;
+
+class Account {
+    protected $db;
+
+    public function __construct() {
+        $this->db = \Flight::db(); // Assuming Flight is used for dependency injection
+    }
 
     public function create($user_id, $name, $balance, $type, $is_primary = 0) {
         $stmt = $this->db->prepare("INSERT INTO accounts (user_id, name, balance, type, is_primary) VALUES (?, ?, ?, ?, ?)");
@@ -10,7 +17,7 @@ class Account extends \models\Base {
     }
     
     public function findAllByUserId($user_id) {
-        $stmt = $this->db->prepare("SELECT * FROM accounts WHERE user_id = ? ORDER BY name ASC");
+        $stmt = $this->db->prepare("SELECT * FROM accounts WHERE user_id = ? ORDER BY acocunt_name ASC");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll();
     }
