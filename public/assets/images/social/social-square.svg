@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <!-- Background -->
+  <rect width="600" height="600" fill="#0e0e0e" />
+  
+  <!-- Gradient accent -->
+  <defs>
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3B37B3" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Decorative elements -->
+  <rect x="0" y="0" width="8" height="600" fill="url(#brandGradient)" />
+  
+  <!-- Centered content -->
+  <g transform="translate(300, 180)">
+    <!-- Logo centered -->
+    <g transform="translate(-90, -90) scale(1.8)">
+      <!-- Chart Container -->
+      <rect x="0" y="0" width="60" height="40" rx="4" ry="4" fill="#f8f9fa" opacity="0.2" />
+      
+      <!-- Chart Bars -->
+      <g transform="translate(8, 5)" stroke-width="0">
+        <rect class="chart-bar" x="0" y="5" width="8" height="25" rx="2" fill="#4F46E5" />
+        <rect class="chart-bar" x="12" y="0" width="8" height="30" rx="2" fill="url(#brandGradient)" />
+        <rect class="chart-bar" x="24" y="10" width="8" height="20" rx="2" fill="#4F46E5" />
+        <rect class="chart-bar" x="36" y="3" width="8" height="27" rx="2" fill="url(#brandGradient)" />
+      </g>
+      
+      <!-- Currency Symbol -->
+      <text x="70" y="28" font-size="22" font-weight="bold" fill="#4F46E5">£</text>
+    </g>
+  </g>
+  
+  <!-- App name -->
+  <g transform="translate(300, 280)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="48" font-weight="700" fill="#4F46E5" text-anchor="middle">
+      <tspan>Visu</tspan><tspan fill="#3B37B3">Budget</tspan>
+    </text>
+    
+    <!-- Tagline -->
+    <text y="40" font-family="'Inter', -apple-system, sans-serif" font-size="20" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="0.5">
+      Smart Financial Planning
+    </text>
+  </g>
+  
+  <!-- Feature bullets -->
+  <g transform="translate(300, 380)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="24" fill="#ffffff" font-weight="600" text-anchor="middle">Track • Visualize • Plan</text>
+  </g>
+  
+  <!-- CTA button -->
+  <g transform="translate(300, 450)">
+    <rect x="-150" y="-30" width="300" height="60" rx="8" ry="8" fill="url(#brandGradient)" />
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle">Get Started Today</text>
+  </g>
+  
+  <!-- Footer -->
+  <g transform="translate(300, 550)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="18" fill="#ffffff" opacity="0.7" text-anchor="middle">visubudget.com</text>
+  </g>
+</svg>

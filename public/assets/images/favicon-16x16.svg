@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <title>VisuBudget Favicon 16x16</title>
+  
+  <defs>
+    <linearGradient id="brandGradient16" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3B37B3" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="16" height="16" rx="3" fill="#1a1a1a" />
+  
+  <!-- Ultra-simplified chart (3 bars only for clarity) -->
+  <g transform="translate(3, 4)">
+    <rect x="0" y="3" width="2" height="5" rx="0.5" fill="#4F46E5" />
+    <rect x="3" y="1" width="2" height="7" rx="0.5" fill="url(#brandGradient16)" />
+    <rect x="6" y="2" width="2" height="6" rx="0.5" fill="#4F46E5" />
+    <rect x="9" y="0" width="2" height="8" rx="0.5" fill="url(#brandGradient16)" />
+  </g>
+  
+  <!-- Currency symbol -->
+  <text x="8" y="14" font-size="6" font-weight="bold" text-anchor="middle" fill="#4F46E5">£</text>
+</svg>

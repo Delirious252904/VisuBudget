@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="100%" height="100%">
+  <!-- Definitions for reusable elements and animations -->
+  <defs>
+    <!-- Gradient for visual interest -->
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3B37B3" />
+    </linearGradient>
+    
+    <!-- Animation for the chart bars -->
+    <style type="text/css">
+      @keyframes barGrow {
+        from { transform: scaleY(0); }
+        to { transform: scaleY(1); }
+      }
+      
+      .chart-bar {
+        transform-origin: bottom;
+        animation: barGrow 1s ease-out forwards;
+        animation-play-state: paused;
+      }
+      
+      svg:hover .chart-bar {
+        animation-play-state: running;
+      }
+      
+      .chart-bar:nth-child(1) { animation-delay: 0.1s; }
+      .chart-bar:nth-child(2) { animation-delay: 0.2s; }
+      .chart-bar:nth-child(3) { animation-delay: 0.3s; }
+      .chart-bar:nth-child(4) { animation-delay: 0.4s; }
+      
+      .logo-text {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        .chart-bar {
+          animation: none !important;
+          transform: scaleY(1);
+        }
+      }
+    </style>
+  </defs>
+  
+  <!-- Logo Background (optional, transparent by default) -->
+  <rect width="320" height="80" fill="none" />
+  
+  <!-- Financial Visualization Element -->
+  <g transform="translate(20, 25)">
+    <!-- Chart Container -->
+    <rect x="0" y="0" width="60" height="40" rx="4" ry="4" fill="#f8f9fa" opacity="0.2" />
+    
+    <!-- Chart Bars -->
+    <g transform="translate(8, 5)" stroke-width="0">
+      <rect class="chart-bar" x="0" y="5" width="8" height="25" rx="2" fill="#4F46E5" />
+      <rect class="chart-bar" x="12" y="0" width="8" height="30" rx="2" fill="url(#brandGradient)" />
+      <rect class="chart-bar" x="24" y="10" width="8" height="20" rx="2" fill="#4F46E5" />
+      <rect class="chart-bar" x="36" y="3" width="8" height="27" rx="2" fill="url(#brandGradient)" />
+    </g>
+    
+    <!-- Currency Symbol -->
+    <text x="70" y="28" font-size="22" font-weight="bold" fill="#4F46E5">£</text>
+  </g>
+  
+  <!-- VisuBudget Text -->
+  <g transform="translate(105, 45)">
+    <text class="logo-text" font-size="28" font-weight="700" fill="#4F46E5">
+      <tspan>Visu</tspan><tspan fill="#3B37B3">Budget</tspan>
+    </text>
+  </g>
+  
+  <!-- Tagline -->
+  <text class="logo-text" x="107" y="60" font-size="10" fill="#666" letter-spacing="0.5">
+    Smart Financial Planning
+  </text>
+</svg>

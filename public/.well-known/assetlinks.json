@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "uk.co.visubudget.twa",
+      "sha256_cert_fingerprints": [
+        "FB:D3:17:6F:18:BA:59:95:4A:06:3A:74:52:EE:2F:25:99:C1:2C:F0:75:C8:CA:C1:0F:92:79:F9:68:A4:B0:4E"
+      ]
+    }
+  }
+]

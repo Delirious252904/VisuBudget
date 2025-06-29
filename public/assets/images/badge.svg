@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <!-- Transparent background -->
+  <rect width="72" height="72" fill="none" rx="36" ry="36"/>
+  
+  <!-- Circle with primary color -->
+  <circle cx="36" cy="36" r="32" fill="#4F46E5"/>
+  
+  <!-- VB Text -->
+  <text x="36" y="44" font-family="Arial, sans-serif" font-weight="bold" font-size="26" 
+        fill="white" text-anchor="middle">VB</text>
+</svg>

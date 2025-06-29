@@ -1,0 +1,18 @@
+{
+    "name": "visubudget/your-future-proof-wallet",
+    "description": "A personal finance PWA to calculate 'Safe to Spend'.",
+    "version": "1.0.0",
+    "require": {
+        "mikecao/flight": "^2.0",
+        "phpmailer/phpmailer": "^6.9",
+        "firebase/php-jwt": "^6.10",
+        "vlucas/phpdotenv": "^5.6",
+        "minishlink/web-push": "^9.0"
+    },
+    "authors": [
+        {
+            "name": "James Groves",
+            "email": "admin@visubudget.co.uk"
+        }
+    ]
+}

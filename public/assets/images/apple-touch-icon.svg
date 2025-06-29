@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <title>VisuBudget Apple Touch Icon</title>
+  <desc>High-resolution VisuBudget icon for iOS devices with detailed financial visualization</desc>
+  
+  <defs>
+    <!-- Brand gradient -->
+    <linearGradient id="brandGradientApple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#5B52E8" />
+      <stop offset="100%" stop-color="#3B37B3" />
+    </linearGradient>
+    
+    <!-- Background gradient -->
+    <radialGradient id="bgGradientApple" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2a2a2a" />
+      <stop offset="100%" stop-color="#0f0f0f" />
+    </radialGradient>
+    
+    <!-- Chart shadow -->
+    <filter id="chartShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with iOS-style rounded corners -->
+  <rect width="180" height="180" rx="20" ry="20" fill="url(#bgGradientApple)" />
+  
+  <!-- Financial Chart Container -->
+  <g transform="translate(30, 45)">
+    <!-- Chart background -->
+    <rect x="0" y="0" width="120" height="70" rx="8" ry="8" fill="#f8f9fa" opacity="0.08" filter="url(#chartShadow)" />
+    
+    <!-- Chart grid lines for more detail -->
+    <g stroke="#f8f9fa" stroke-width="0.5" opacity="0.1">
+      <line x1="10" y1="60" x2="110" y2="60" />
+      <line x1="10" y1="45" x2="110" y2="45" />
+      <line x1="10" y1="30" x2="110" y2="30" />
+      <line x1="10" y1="15" x2="110" y2="15" />
+    </g>
+    
+    <!-- Chart bars with enhanced detail -->
+    <g transform="translate(15, 8)" stroke-width="0">
+      <rect x="0" y="25" width="12" height="27" rx="4" fill="#4F46E5" filter="url(#glow)" />
+      <rect x="16" y="15" width="12" height="37" rx="4" fill="url(#brandGradientApple)" filter="url(#glow)" />
+      <rect x="32" y="30" width="12" height="22" rx="4" fill="#4F46E5" filter="url(#glow)" />
+      <rect x="48" y="18" width="12" height="34" rx="4" fill="url(#brandGradientApple)" filter="url(#glow)" />
+      <rect x="64" y="28" width="12" height="24" rx="4" fill="#4F46E5" filter="url(#glow)" />
+      <rect x="80" y="20" width="12" height="32" rx="4" fill="url(#brandGradientApple)" filter="url(#glow)" />
+    </g>
+  </g>
+  
+  <!-- Enhanced Currency Symbol -->
+  <g transform="translate(90, 130)">
+    <circle cx="0" cy="0" r="25" fill="url(#brandGradientApple)" opacity="0.2" filter="url(#glow)" />
+    <text x="0" y="8" font-size="32" font-weight="bold" text-anchor="middle" fill="#4F46E5" filter="url(#glow)">£</text>
+  </g>
+  
+  <!-- VB Monogram in corner -->
+  <g transform="translate(145, 35)">
+    <circle cx="0" cy="0" r="18" fill="url(#brandGradientApple)" opacity="0.9" filter="url(#chartShadow)" />
+    <text x="0" y="4" font-size="16" font-weight="bold" text-anchor="middle" fill="white">VB</text>
+  </g>
+  
+  <!-- Subtle highlight for depth -->
+  <ellipse cx="90" cy="60" rx="80" ry="20" fill="url(#brandGradientApple)" opacity="0.05" />
+</svg>

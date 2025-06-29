@@ -1,0 +1,91 @@
+/* assets/css/style.css */
+
+/* Use the Inter font loaded in the header */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #111827; /* bg-gray-900 */
+    color: #f9fafb; /* text-gray-100 */
+}
+
+/* A little extra style for sections to make them pop */
+section {
+    border: 1px solid #374151; /* border-gray-700 */
+}
+
+/* Style for the floating action button (FAB) */
+.fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease-in-out;
+}
+
+/*
+ * --- DARK MODE FORM OVERRIDES ---
+ * This section makes the Tailwind Forms plugin look great on a dark background.
+ */
+
+/* Style for text inputs, number inputs, and select dropdowns */
+.form-input,
+.form-select,
+.form-textarea,
+.form-multiselect {
+    background-color: #1f2937 !important; /* bg-gray-800 */
+    border-color: #4b5563; /* bg-gray-600 */
+    color: #d1d5db; /* text-gray-300 */
+
+    width: 100%;
+    border: 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    --tw-ring-color: #3b82f6; /* ring-blue-500 */
+    border-color: #3b82f6; /* border-blue-500 */
+}
+
+/* Style for checkboxes and radio buttons */
+.form-checkbox,
+.form-radio {
+    background-color: #1f2937; /* bg-gray-800 */
+    border-color: #4b5563; /* bg-gray-600 */
+    color: #3b82f6; /* text-blue-500 */
+}
+
+.form-checkbox:focus,
+.form-radio:focus {
+    --tw-ring-color: #3b82f6; /* ring-blue-500 */
+}
+
+
+/* General Button Styles */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.btn-primary {
+    background-color: #3b82f6; /* blue-500 */
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb; /* blue-600 */
+    transform: translateY(-1px);
+}
+
+#confirmation-modal.hidden {
+    display: none;
+}

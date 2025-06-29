@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0e0e0e" />
+  
+  <!-- Gradient accent -->
+  <defs>
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3B37B3" />
+    </linearGradient>
+    <clipPath id="screenClip">
+      <rect x="600" y="130" width="500" height="370" rx="12" ry="12" />
+    </clipPath>
+  </defs>
+  
+  <!-- Decorative elements -->
+  <rect x="0" y="0" width="10" height="630" fill="url(#brandGradient)" />
+  <rect x="550" y="0" width="2" height="630" fill="#1e1e1e" />
+  
+  <!-- Left side content -->
+  <g transform="translate(80, 100)">
+    <!-- Logo -->
+    <g transform="scale(1.5)">
+      <!-- Chart Container -->
+      <rect x="0" y="0" width="60" height="40" rx="4" ry="4" fill="#f8f9fa" opacity="0.2" />
+      
+      <!-- Chart Bars -->
+      <g transform="translate(8, 5)" stroke-width="0">
+        <rect class="chart-bar" x="0" y="5" width="8" height="25" rx="2" fill="#4F46E5" />
+        <rect class="chart-bar" x="12" y="0" width="8" height="30" rx="2" fill="url(#brandGradient)" />
+        <rect class="chart-bar" x="24" y="10" width="8" height="20" rx="2" fill="#4F46E5" />
+        <rect class="chart-bar" x="36" y="3" width="8" height="27" rx="2" fill="url(#brandGradient)" />
+      </g>
+      
+      <!-- Currency Symbol -->
+      <text x="70" y="28" font-size="22" font-weight="bold" fill="#4F46E5">£</text>
+    </g>
+    
+    <!-- VisuBudget Text -->
+    <g transform="translate(110, 30)">
+      <text font-family="'Inter', -apple-system, sans-serif" font-size="42" font-weight="700" fill="#4F46E5">
+        <tspan>Visu</tspan><tspan fill="#3B37B3">Budget</tspan>
+      </text>
+    </g>
+    
+    <!-- Tagline -->
+    <text x="112" y="60" font-family="'Inter', -apple-system, sans-serif" font-size="18" fill="#ffffff" opacity="0.9" letter-spacing="0.5">
+      Smart Financial Planning
+    </text>
+    
+    <!-- Feature bullets -->
+    <g transform="translate(30, 130)">
+      <!-- Feature 1 -->
+      <circle cx="0" cy="0" r="8" fill="url(#brandGradient)" />
+      <text x="25" y="5" font-family="'Inter', -apple-system, sans-serif" font-size="22" fill="#ffffff" font-weight="600">Track Multiple Income Streams</text>
+      
+      <!-- Feature 2 -->
+      <circle cx="0" cy="60" r="8" fill="url(#brandGradient)" />
+      <text x="25" y="65" font-family="'Inter', -apple-system, sans-serif" font-size="22" fill="#ffffff" font-weight="600">Real-time Spendable Income</text>
+      
+      <!-- Feature 3 -->
+      <circle cx="0" cy="120" r="8" fill="url(#brandGradient)" />
+      <text x="25" y="125" font-family="'Inter', -apple-system, sans-serif" font-size="22" fill="#ffffff" font-weight="600">Works Offline</text>
+    </g>
+    
+    <!-- Call to action -->
+    <rect x="70" y="330" width="300" height="60" rx="8" ry="8" fill="url(#brandGradient)" />
+    <text x="220" y="370" font-family="'Inter', -apple-system, sans-serif" font-size="22" fill="#ffffff" font-weight="600" text-anchor="middle">Get Started Today</text>
+  </g>
+  
+  <!-- Right side content -->
+  <g transform="translate(600, 130)">
+    <!-- Dashboard preview -->
+    <rect x="0" y="0" width="500" height="370" rx="12" ry="12" fill="#1e1e1e" />
+    
+    <!-- Dashboard header -->
+    <rect x="0" y="0" width="500" height="60" rx="12" ry="12" fill="#252525" />
+    <text x="25" y="38" font-family="'Inter', -apple-system, sans-serif" font-size="20" fill="#ffffff" font-weight="600">Dashboard</text>
+    
+    <!-- Charts -->
+    <g transform="translate(25, 80)">
+      <rect x="0" y="0" width="210" height="120" rx="8" ry="8" fill="#252525" />
+      <text x="15" y="30" font-family="'Inter', -apple-system, sans-serif" font-size="16" fill="#ffffff" opacity="0.8">Current Balance</text>
+      <text x="15" y="70" font-family="'Inter', -apple-system, sans-serif" font-size="30" fill="#ffffff" font-weight="700">£2,456.78</text>
+      
+      <!-- Mini chart -->
+      <g transform="translate(15, 90)">
+        <line x1="0" y1="15" x2="180" y2="15" stroke="#3c3c3c" stroke-width="1" />
+        <path d="M0,15 L30,10 L60,18 L90,5 L120,12 L150,8 L180,3" stroke="#4F46E5" stroke-width="2" fill="none" />
+      </g>
+    </g>
+    
+    <!-- Transactions -->
+    <g transform="translate(25, 220)">
+      <rect x="0" y="0" width="450" height="60" rx="8" ry="8" fill="#252525" />
+      <circle cx="30" cy="30" r="15" fill="#4F46E5" opacity="0.2" />
+      <text x="30" y="35" font-family="'Inter', -apple-system, sans-serif" font-size="16" fill="#4F46E5" text-anchor="middle">£</text>
+      <text x="60" y="25" font-family="'Inter', -apple-system, sans-serif" font-size="16" fill="#ffffff">Salary Deposit</text>
+      <text x="60" y="45" font-family="'Inter', -apple-system, sans-serif" font-size="14" fill="#ffffff" opacity="0.6">06/15/2025</text>
+      <text x="430" y="35" font-family="'Inter', -apple-system, sans-serif" font-size="18" fill="#00C851" font-weight="600" text-anchor="end">+£1,850.00</text>
+    </g>
+    
+    <g transform="translate(25, 290)">
+      <rect x="0" y="0" width="450" height="60" rx="8" ry="8" fill="#252525" />
+      <circle cx="30" cy="30" r="15" fill="#ff4444" opacity="0.2" />
+      <text x="30" y="35" font-family="'Inter', -apple-system, sans-serif" font-size="16" fill="#ff4444" text-anchor="middle">£</text>
+      <text x="60" y="25" font-family="'Inter', -apple-system, sans-serif" font-size="16" fill="#ffffff">Rent Payment</text>
+      <text x="60" y="45" font-family="'Inter', -apple-system, sans-serif" font-size="14" fill="#ffffff" opacity="0.6">06/18/2025</text>
+      <text x="430" y="35" font-family="'Inter', -apple-system, sans-serif" font-size="18" fill="#ff4444" font-weight="600" text-anchor="end">-£950.00</text>
+    </g>
+  </g>
+  
+  <!-- Footer -->
+  <g transform="translate(600, 550)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="18" fill="#ffffff" opacity="0.7" text-anchor="middle">visubudget.com</text>
+  </g>
+</svg>
