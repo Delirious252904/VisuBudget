@@ -12,7 +12,7 @@
                     <div id="account-<?php echo $account['account_id']; ?>" class="bg-gray-700 p-4 rounded-lg shadow-md transition-all duration-300">
                         <div class="flex justify-between items-center">
                             <div class="flex-grow">
-                                <h3 class="font-bold text-lg text-white"><?php echo htmlspecialchars($account['name']); ?></h3>
+                                <h3 class="font-bold text-lg text-white"><?php echo htmlspecialchars($account['account_name']); ?></h3>
                                 <p class="text-sm text-gray-400">
                                     Current Balance: 
                                     <span class="font-semibold text-white">£<?php echo number_format($account['current_balance'], 2); ?></span>
@@ -32,14 +32,14 @@
                             <?php if ($account['recurring_income'] > 0): ?>
                                 <div class="flex items-center text-green-400">
                                     <i class="fas fa-arrow-up mr-2"></i>
-                                    <span>Recurring Income: <strong>£<?php echo number_format($account['recurring_income'], 2); ?></strong>/month</span>
+                                    <span>Regular Income: <strong>£<?php echo number_format($account['recurring_income'], 2); ?></strong>/month</span>
                                 </div>
                             <?php endif; ?>
 
                             <?php if ($account['recurring_expenses'] > 0): ?>
                                 <div class="flex items-center text-red-400">
                                     <i class="fas fa-arrow-down mr-2"></i>
-                                    <span>Recurring Expenses: <strong>£<?php echo number_format($account['recurring_expenses'], 2); ?></strong>/month</span>
+                                    <span>Regular Expenses: <strong>£<?php echo number_format($account['recurring_expenses'], 2); ?></strong>/month</span>
                                 </div>
                             <?php endif; ?>
                         </div>
