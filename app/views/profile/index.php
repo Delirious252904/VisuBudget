@@ -71,8 +71,6 @@
         <div class="max-w-md">
             <p id="notification-status" class="text-gray-400 mb-4">Checking notification status...</p>
             
-            <!-- This button is what our JavaScript will look for. -->
-            <!-- We safely pass the public key from our .env file to the button as a data attribute -->
             <button 
                 id="enable-notifications-button" 
                 class="btn btn-primary"
@@ -90,10 +88,6 @@
             Subscription
         </h2>
         <div class="max-w-md">
-            <!-- 
-                We check if the 'subscription_tier' key exists before trying to use it.
-                If it doesn't, we just default to showing 'free'.
-            -->
             <p class="text-gray-300">You are currently on the <span class="font-bold capitalize text-green-400"><?php echo htmlspecialchars($user['subscription_tier'] ?? 'free'); ?></span> plan.</p>
             <p class="text-gray-400 mt-4">Premium features coming soon!</p>
         </div>
@@ -109,7 +103,7 @@
             <!-- Reset Data -->
             <div>
                 <h3 class="text-lg font-semibold">Reset All Data</h3>
-                <p class="text-gray-400 mt-1 mb-3">This will permanently delete all of your accounts, transactions, and recurring rules, but will keep your user account. This is useful if you want to start over from scratch.</p>
+                <p class="text-gray-400 mt-1 mb-3">This will permanently delete all of your accounts, transactions, and recurring rules, but will keep your user account.</p>
                 <form action="/profile/reset-data" method="POST" class="js-delete-form">
                     <button type="submit" class="btn bg-yellow-600 hover:bg-yellow-500 text-white">Reset My Data</button>
                 </form>
@@ -122,6 +116,18 @@
                     <button type="submit" class="btn bg-red-600 hover:bg-red-500 text-white">Delete My Account</button>
                 </form>
             </div>
+        </div>
+    </section>
+
+    <!-- NEW: Logout Section -->
+    <section class="bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-sign-out-alt mr-3 text-blue-400"></i>
+            Logout
+        </h2>
+        <div class="max-w-md">
+            <p class="text-gray-400 mb-4">Are you sure you want to end your session?</p>
+            <a href="/logout" class="btn btn-primary w-full md:w-auto text-center">Logout of My Account</a>
         </div>
     </section>
 </div>
