@@ -4,6 +4,7 @@ namespace models;
 
 use models\RecurringRule;
 use PDO;
+use DateTime;
 
 class Transaction {
     protected $db;
@@ -12,75 +13,118 @@ class Transaction {
         $this->db = \Flight::db();
     }
 
-    /**
-     * Finds the true next income date by checking both generated transactions and recurring rules.
-     *
-     * @param int $user_id The ID of the user.
-     * @return string|null The date of the next income in 'Y-m-d' format, or null.
-     */
     public function findNextIncomeEvent($user_id) {
         $potentialEvents = [];
+        $today = new DateTime('today');
 
-        // 1. Find the nearest future income from already-generated transactions.
-        $sql = "SELECT transaction_date, amount FROM transactions WHERE user_id = :user_id AND type = 'income' AND transaction_date > CURDATE() ORDER BY transaction_date ASC LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $user_id, \PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetch();
+        // 1. Find nearest future income from generated transactions
+        $stmt_trans = $this->db->prepare(
+            "SELECT transaction_date, amount FROM transactions 
+             WHERE user_id = :user_id AND type = 'income' AND transaction_date >= :today 
+             ORDER BY transaction_date ASC LIMIT 1"
+        );
+        $stmt_trans->execute([':user_id' => $user_id, ':today' => $today->format('Y-m-d')]);
+        $result = $stmt_trans->fetch();
         if ($result) {
-            $potentialEvents[] = ['date' => new \DateTime($result['transaction_date']), 'amount' => $result['amount']];
+            $potentialEvents[] = ['date' => new DateTime($result['transaction_date']), 'amount' => $result['amount']];
         }
 
-        // 2. Find the next income date from all recurring income rules.
+        // 2. Find next income from recurring rules
         $ruleModel = new RecurringRule();
         $rules = $ruleModel->findAllByUserId($user_id);
         foreach ($rules as $rule) {
             if ($rule['type'] === 'income') {
                 $nextDueDate = RecurringRule::calculateNextDueDate($rule);
-                if ($nextDueDate) {
-                    $potentialEvents[] = ['date' => $nextDueDate, 'amount' => $rule['amount']];
+                if ($nextDueDate && $nextDueDate >= $today) {
+                     $potentialEvents[] = ['date' => $nextDueDate, 'amount' => $rule['amount']];
                 }
             }
         }
 
-        // 3. If we didn't find any events, return null.
-        if (empty($potentialEvents)) {
-            return null;
-        }
+        if (empty($potentialEvents)) return null;
 
-        // 4. Sort all the potential events by date and return the earliest one.
-        usort($potentialEvents, function($a, $b) {
-            return $a['date'] <=> $b['date'];
-        });
+        usort($potentialEvents, function($a, $b) { return $a['date'] <=> $b['date']; });
         
-        // Return the winning event as a simple array.
         return [
             'date' => $potentialEvents[0]['date']->format('Y-m-d'),
             'amount' => $potentialEvents[0]['amount']
         ];
     }
+    
+    /**
+     * -- REWRITTEN AND FIXED --
+     * Calculates the total upcoming expenses by combining generated transactions and projecting future recurring rules.
+     */
+    public function getExpensesTotalBetweenDates($user_id, $startDateStr, $endDateStr) {
+        $totalExpenses = 0;
+        $start = new DateTime($startDateStr);
+        $end = new DateTime($endDateStr);
 
-    public function getExpensesTotalBetweenDates($user_id, $startDate, $endDate) {
-        $sql = "SELECT SUM(amount) as total_expenses FROM transactions WHERE user_id = :user_id AND type = 'expense' AND transaction_date BETWEEN :start_date AND :end_date";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $user_id, \PDO::PARAM_INT);
-        $stmt->bindParam(':start_date', $startDate);
-        $stmt->bindParam(':end_date', $endDate);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return (float)($result['total_expenses'] ?? 0.00);
+        // 1. Get sum of already generated future expenses and transfers in the date range
+        $sql_generated = "SELECT SUM(amount) as total 
+                          FROM transactions 
+                          WHERE user_id = :user_id 
+                            AND (type = 'expense' OR type = 'transfer')
+                            AND transaction_date > :start_date 
+                            AND transaction_date <= :end_date";
+    
+        $stmt_generated = $this->db->prepare($sql_generated);
+        $stmt_generated->execute([
+            ':user_id' => $user_id,
+            ':start_date' => $startDateStr,
+            ':end_date' => $endDateStr
+        ]);
+        $totalExpenses += (float) $stmt_generated->fetchColumn();
+    
+        // 2. Project future expenses from recurring rules that have NOT been generated yet
+        $ruleModel = new RecurringRule();
+        $rules = $ruleModel->findAllByUserId($user_id);
+
+        foreach ($rules as $rule) {
+            if ($rule['type'] !== 'expense' && $rule['type'] !== 'transfer') {
+                continue;
+            }
+
+            // Start checking from the rule's start date
+            $nextDate = new DateTime($rule['start_date']);
+
+            // Loop through all possible future occurrences of the rule
+            while ($nextDate <= $end) {
+                // Only consider dates that fall within our calculation window (today -> next income)
+                if ($nextDate > $start) {
+                    // Check if a transaction for this rule on this specific date has ALREADY been created by the cron job.
+                    $exists_stmt = $this->db->prepare("SELECT COUNT(*) FROM transactions WHERE rule_id = ? AND transaction_date = ?");
+                    $exists_stmt->execute([$rule['rule_id'], $nextDate->format('Y-m-d')]);
+                    
+                    // If no transaction exists for this date, it's a projected expense we need to count.
+                    if ($exists_stmt->fetchColumn() == 0) {
+                        $totalExpenses += (float)$rule['amount'];
+                    }
+                }
+
+                // Correctly calculate the next date for the next loop iteration
+                $nextDate = RecurringRule::calculateNextDateForRule($nextDate, $rule);
+                if ($nextDate === null) {
+                    break; // Stop if rule has no more valid dates
+                }
+            }
+        }
+    
+        return $totalExpenses;
     }
 
     /**
-     * Fetches upcoming transactions with their IDs for the dashboard.
+     * -- FIXED --
+     * Fetches upcoming ONE-OFF transactions (not linked to a rule) for the dashboard.
      */
-    public function findUpcomingByUserId($user_id, $limit = 5)
-    {
+    public function findUpcomingByUserId($user_id, $limit = 5) {
         $stmt = $this->db->prepare("
             SELECT transaction_id, description, transaction_date, amount, type
             FROM transactions
-            WHERE user_id = :user_id AND transaction_date >= CURDATE()
-            ORDER BY transaction_date ASC, type DESC
+            WHERE user_id = :user_id 
+              AND transaction_date >= CURDATE()
+              AND rule_id IS NULL
+            ORDER BY transaction_date ASC
             LIMIT :limit
         ");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);

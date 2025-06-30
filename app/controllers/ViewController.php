@@ -7,6 +7,7 @@ use models\Transaction;
 use models\RecurringRule;
 use models\User;
 use models\SavingsGoal;
+use DateTime;
 
 class ViewController {
 
@@ -14,10 +15,6 @@ class ViewController {
         return \Flight::get('user_data')['user_id'] ?? null;
     }
 
-    /**
-     * Renders a view for an authenticated user, including the standard header and footer.
-     * -- FIX: Added the missing header and footer rendering calls. --
-     */
     public function render($viewName, $data = []) {
         $userModel = new User();
         $user_id = $this->getUserId();
@@ -26,14 +23,11 @@ class ViewController {
         }
         $data['flash_messages'] = \Flight::getFlashes();
         
-        \Flight::render('layout/header', $data); // Render the main application header
-        \Flight::render($viewName, $data);      // Render the specific view's content
-        \Flight::render('layout/footer', $data); // Render the main application footer
+        \Flight::render('layout/header', $data);
+        \Flight::render($viewName, $data);
+        \Flight::render('layout/footer', $data);
     }
     
-    /**
-     * Renders a view for a public (not logged-in) user.
-     */
     public function renderPublic($viewName, $data = []) {
         $data['flash_messages'] = \Flight::getFlashes();
         \Flight::render('layout/public_header', []);
@@ -41,9 +35,6 @@ class ViewController {
         \Flight::render('layout/public_footer', []);
     }
 
-    /**
-     * Displays the main dashboard page.
-     */
     public function dashboard() {
         $user_id = $this->getUserId();
         if (!$user_id) { \Flight::redirect('/login'); return; }
@@ -60,20 +51,18 @@ class ViewController {
             return;
         }
 
-        // --- Upcoming Events Logic ---
+        // --- Upcoming Events Logic (FIXED) ---
         $upcomingEvents = [];
-        $realTransactions = $transactionModel->findUpcomingByUserId($user_id);
-        foreach ($realTransactions as $tx) {
-            $upcomingEvents[$tx['transaction_date'] . '.' . $tx['transaction_id']] = $tx;
-        }
+        $look_ahead_date = new DateTime('+3 months');
 
+        // 1. Get future occurrences from recurring rules
         $rules = $ruleModel->findAllByUserId($user_id);
         foreach ($rules as $rule) {
-            $nextDueDate = RecurringRule::calculateNextDueDate($rule);
-            if ($nextDueDate) {
+            $nextDate = RecurringRule::calculateNextDueDate($rule);
+            if ($nextDate && $nextDate <= $look_ahead_date) {
                 $event = [
                     'transaction_id' => 'rule_' . $rule['rule_id'],
-                    'transaction_date' => $nextDueDate->format('Y-m-d'),
+                    'transaction_date' => $nextDate->format('Y-m-d'),
                     'description' => $rule['description'],
                     'amount' => $rule['amount'],
                     'type' => $rule['type']
@@ -81,6 +70,14 @@ class ViewController {
                 $upcomingEvents[$event['transaction_date'] . '.' . $event['transaction_id']] = $event;
             }
         }
+        
+        // 2. Get one-off future transactions (that are not part of a rule)
+        $oneOffTransactions = $transactionModel->findUpcomingByUserId($user_id, 10);
+        foreach ($oneOffTransactions as $tx) {
+            $upcomingEvents[$tx['transaction_date'] . '.' . $tx['transaction_id']] = $tx;
+        }
+        
+        // 3. Sort all events and get the top 5 for display
         uasort($upcomingEvents, function($a, $b) { return strtotime($a['transaction_date']) <=> strtotime($b['transaction_date']); });
         $upcomingTransactionsForDisplay = array_slice($upcomingEvents, 0, 5);
         
@@ -95,10 +92,13 @@ class ViewController {
         $finalSafeToSpend = $totalBalance;
 
         if ($nextIncomeEvent) {
-            $nextIncomeDate = new \DateTime($nextIncomeEvent['date']);
+            $nextIncomeDate = new DateTime($nextIncomeEvent['date']);
             $nextIncomeAmount = (float)$nextIncomeEvent['amount'];
-            $today = new \DateTime('today');
+            $today = new DateTime('today');
+            
+            // This now correctly calculates ALL expenses and transfers until the next income date.
             $totalExpensesUntilNextIncome = $transactionModel->getExpensesTotalBetweenDates($user_id, $today->format('Y-m-d'), $nextIncomeDate->format('Y-m-d'));
+            
             $rawSafeToSpend = $totalBalance - $totalExpensesUntilNextIncome;
             $finalSafeToSpend = $rawSafeToSpend;
             
