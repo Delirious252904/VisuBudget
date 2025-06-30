@@ -14,13 +14,26 @@ class ViewController {
         return \Flight::get('user_data')['user_id'] ?? null;
     }
 
+    /**
+     * Renders a view for an authenticated user, including the standard header and footer.
+     * -- FIX: Added the missing header and footer rendering calls. --
+     */
     public function render($viewName, $data = []) {
         $userModel = new User();
-        $data['user'] = $userModel->findById($this->getUserId());
+        $user_id = $this->getUserId();
+        if ($user_id) {
+            $data['user'] = $userModel->findById($user_id);
+        }
         $data['flash_messages'] = \Flight::getFlashes();
-        \Flight::render($viewName, $data);
+        
+        \Flight::render('layout/header', $data); // Render the main application header
+        \Flight::render($viewName, $data);      // Render the specific view's content
+        \Flight::render('layout/footer', $data); // Render the main application footer
     }
     
+    /**
+     * Renders a view for a public (not logged-in) user.
+     */
     public function renderPublic($viewName, $data = []) {
         $data['flash_messages'] = \Flight::getFlashes();
         \Flight::render('layout/public_header', []);
@@ -30,7 +43,6 @@ class ViewController {
 
     /**
      * Displays the main dashboard page.
-     * This version is fully corrected and synchronized with all models.
      */
     public function dashboard() {
         $user_id = $this->getUserId();
@@ -72,8 +84,7 @@ class ViewController {
         uasort($upcomingEvents, function($a, $b) { return strtotime($a['transaction_date']) <=> strtotime($b['transaction_date']); });
         $upcomingTransactionsForDisplay = array_slice($upcomingEvents, 0, 5);
         
-        // --- Safe to Spend Logic (FIXED) ---
-        // FIX: Use the new method that only calculates balance up to today.
+        // --- Safe to Spend Logic ---
         $totalBalance = $accountModel->getCurrentTotalBalanceByUserId($user_id);
         $nextIncomeEvent = $transactionModel->findNextIncomeEvent($user_id);
         
@@ -123,7 +134,6 @@ class ViewController {
             'nextIncomeMessage' => $nextIncomeMessage,
             'dailyAllowanceMessage' => $dailyAllowanceMessage,
             'savingsMessage' => $savingsMessage,
-            // FIX: Use the new method to get current balances for the account list.
             'accounts' => $accountModel->findAllByUserIdWithCurrentBalances($user_id),
             'upcomingTransactions' => $upcomingTransactionsForDisplay,
             'expenseChartData' => $transactionModel->getDailyExpensesForChart($user_id),
@@ -144,7 +154,9 @@ class ViewController {
         $this->render('add_transaction/index', ['accounts' => (new Account())->findAllByUserId($this->getUserId())]);
     }
     
-    public function addAccountForm() { $this->render('add_account/index'); }
+    public function addAccountForm() { 
+        $this->render('add_account/index'); 
+    }
 
     public function showRecurringRules() {
         $user_id = $this->getUserId();
