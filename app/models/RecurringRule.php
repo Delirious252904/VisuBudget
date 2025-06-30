@@ -94,9 +94,33 @@ class RecurringRule {
         return $totals;
     }
 
-    public function create($user_id, $description, $amount, $type, $start_date, $frequency, $interval_value, $day_of_week, $occurrences, $from_account_id, $to_account_id, $end_date) {
-        $stmt = $this->db->prepare("INSERT INTO recurring_rules (user_id, description, amount, type, start_date, frequency, interval_value, day_of_week, occurrences, from_account_id, to_account_id, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$user_id, $description, $amount, $type, $start_date, $frequency, $interval_value, $day_of_week, $occurrences, $from_account_id, $to_account_id, $end_date]);
+   /**
+     * -- REWRITTEN & FIXED --
+     * Creates a new recurring rule from a data array.
+     */
+    public function create($data) {
+        $sql = "INSERT INTO recurring_rules 
+                    (user_id, description, amount, type, start_date, frequency, interval_value, day_of_week, day_of_month, occurrences, from_account_id, to_account_id, end_date) 
+                VALUES 
+                    (:user_id, :description, :amount, :type, :start_date, :frequency, :interval_value, :day_of_week, :day_of_month, :occurrences, :from_account_id, :to_account_id, :end_date)";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        return $stmt->execute([
+            ':user_id' => $data['user_id'],
+            ':description' => $data['description'],
+            ':amount' => $data['amount'],
+            ':type' => $data['type'],
+            ':start_date' => $data['start_date'],
+            ':frequency' => $data['frequency'],
+            ':interval_value' => $data['interval_value'] ?? 1,
+            ':day_of_week' => $data['day_of_week'] ?? null,
+            ':day_of_month' => $data['day_of_month'] ?? null,
+            ':occurrences' => $data['occurrences'] ?? null,
+            ':from_account_id' => $data['from_account_id'] ?? null,
+            ':to_account_id' => $data['to_account_id'] ?? null,
+            ':end_date' => $data['end_date'] ?? null
+        ]);
     }
     
     public function findAllByUserId($user_id) {
@@ -130,6 +154,15 @@ class RecurringRule {
     public function findAllByUserIdWithPagination($user_id, $offset, $limit) {
         $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE user_id = ? ORDER BY start_date DESC LIMIT ?, ?");
         $stmt->execute([$user_id, $offset, $limit]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Finds all active recurring rules in the system.
+     */
+    public function findAllActive() {
+        $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE end_date IS NULL OR end_date >= CURDATE()");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 }

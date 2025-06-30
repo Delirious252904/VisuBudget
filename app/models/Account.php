@@ -93,4 +93,21 @@ class Account {
     
         return $stmt1->rowCount() > 0 || $stmt2->rowCount() > 0;
     }
+
+    /**
+     * Adjusts the balance of a specific account by a given amount.
+     * Can be positive (for adding money) or negative (for subtracting).
+     *
+     * @param int $account_id The ID of the account to adjust.
+     * @param float $amount The amount to adjust by (can be negative).
+     * @return bool True on success, false on failure.
+     */
+    public function adjustBalance($account_id, $amount) {
+        if ($account_id === null) {
+            return true; // Nothing to adjust
+        }
+        $sql = "UPDATE accounts SET current_balance = current_balance + ? WHERE account_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$amount, $account_id]);
+    }
 }

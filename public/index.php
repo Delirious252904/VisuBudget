@@ -159,17 +159,19 @@ Flight::route('POST /account/delete/@id', function($id) { (new controllers\Accou
 Flight::route('GET /account/reset/@id', function($id) { (new controllers\AccountController())->showResetForm($id); });
 Flight::route('POST /account/reset/@id', function($id) { (new controllers\AccountController())->handleResetBalance($id); });
 
+// All transaction and recurring rule creation now goes through a single form and controller.
 Flight::route('GET /transactions', function() { (new controllers\TransactionController())->showList(); });
-Flight::route('GET /transaction/add', function() { (new controllers\ViewController())->addTransactionForm(); });
-Flight::route('POST /transaction/add', function() { (new controllers\TransactionController())->add(); });
+Flight::route('GET /transaction/add', function() { (new controllers\TransactionController())->showAddForm(); });
+Flight::route('POST /transaction/add', function() { (new controllers\TransactionController())->create(); });
 Flight::route('GET /transaction/edit/@id', function($id) { (new controllers\TransactionController())->showEditForm($id); });
-Flight::route('POST /transaction/edit/@id', function($id) { (new controllers\TransactionController())->update($id); });
+Flight::route('POST /transaction/update/@id', function($id) { (new controllers\TransactionController())->update($id); });
 Flight::route('POST /transaction/delete/@id', function($id) { (new controllers\TransactionController())->delete($id); });
 
-Flight::route('GET /recurring', function() { (new controllers\ViewController())->showRecurringRules(); });
-Flight::route('GET /recurring/edit/@rule_id', function($rule_id) { (new controllers\RecurringController())->showEditForm($rule_id); });
-Flight::route('POST /recurring/edit/@rule_id', function($rule_id) { (new controllers\RecurringController())->update($rule_id); });
-Flight::route('POST /recurring/delete/@rule_id', function($rule_id) { (new controllers\RecurringController())->delete($rule_id); });
+// Routes for managing the list of recurring rules
+Flight::route('GET /recurring', function() { (new controllers\RecurringController())->showList(); });
+Flight::route('GET /recurring/edit/@id', function($id) { (new controllers\RecurringController())->showEditForm($id); });
+Flight::route('POST /recurring/update/@id',function($id) { (new controllers\RecurringController())->update($id); });
+Flight::route('POST /recurring/delete/@id', function($id) { (new controllers\RecurringController())->delete($id); });
 
 Flight::route('POST /notifications/subscribe', function() { (new controllers\NotificationController())->subscribe(); });
 
