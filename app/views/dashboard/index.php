@@ -29,14 +29,14 @@
     <?php endif; ?>
 
      <!-- Savings Goal Message -->
-    <?php if (isset($savingsMessage)): ?>
+    <?php //if (isset($savingsMessage)): ?>
     <div class="mt-4 pt-4 border-t border-gray-700 bg-green-900/50 rounded-b-lg -mx-6 -mb-6 px-6 py-4">
         <p class="text-lg font-semibold text-green-300">
             <i class="fas fa-piggy-bank mr-2"></i>
             <?php echo $savingsMessage; ?>
         </p>
     </div>
-    <?php endif; ?>
+    <?php //endif; ?>
 </section>
 
 <!-- Savings Goals Mini-View (Premium Only) -->

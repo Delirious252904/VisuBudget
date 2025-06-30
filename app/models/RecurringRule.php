@@ -10,39 +10,87 @@ class RecurringRule {
         $this->db = \Flight::db();
     }
 
+    // --- FIX: The main calculation logic has been significantly improved ---
+    
+    /**
+     * Calculates the next occurrence of a rule AFTER a given date.
+     *
+     * @param array $rule The recurring rule data.
+     * @param string $after_date_str The date to calculate from (defaults to 'today').
+     * @return DateTime|null The next due date, or null if none.
+     */
+    public static function calculateNextDueDate(array $rule, $after_date_str = 'today') {
+        try {
+            $current = new DateTime($rule['start_date']);
+            $after = new DateTime($after_date_str);
+
+            // Fast-forward until the date is on or after our start point
+            while ($current < $after) {
+                $current = self::calculateNextDateForRule($current, $rule);
+                if ($current === null) return null;
+            }
+
+            // If the rule's start date is in the future, it's the next due date.
+            if ($current > $after) {
+                 return $rule['end_date'] && $current > new DateTime($rule['end_date']) ? null : $current;
+            }
+
+            // If we land exactly on the 'after' date, we need the *next* one
+            $next = self::calculateNextDateForRule($current, $rule);
+            return $rule['end_date'] && $next > new DateTime($rule['end_date']) ? null : $next;
+
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Calculates the single next date from a given current date based on the rule's frequency.
+     * This is now the core, reliable function for date progression.
+     */
+    public static function calculateNextDateForRule(DateTime $current, array $rule): ?DateTime {
+        $next_date = clone $current;
+        $interval = max(1, (int)($rule['interval_value'] ?? 1));
+
+        switch ($rule['frequency']) {
+            case 'daily':
+                $next_date->modify("+{$interval} day");
+                break;
+            case 'weekly':
+                $next_date->modify("+{$interval} week");
+                break;
+            case 'monthly':
+                $next_date->modify("+{$interval} month");
+                // If a specific day is set, adjust to that day of the new month.
+                if (!empty($rule['day_of_month'])) {
+                    $year = $next_date->format('Y');
+                    $month = $next_date->format('m');
+                    $day = $rule['day_of_month'];
+                    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year);
+                    $actual_day = min($day, $daysInMonth);
+                    $next_date->setDate((int)$year, (int)$month, $actual_day);
+                }
+                break;
+            case 'yearly':
+                $next_date->modify("+{$interval} year");
+                break;
+            default:
+                return null;
+        }
+        return $next_date;
+    }
+
+    // --- All other methods remain the same ---
+    
     public function getMonthlyTotalsForAccount($account_id) {
-        $totals = [
-            'income' => 0,
-            'expenses' => 0,
-        ];
-
-        $stmt_income = $this->db->prepare(
-            "SELECT SUM(amount) as total FROM recurring_rules WHERE to_account_id = ? AND type = 'income' AND (end_date IS NULL OR end_date >= CURDATE())"
-        );
+        // This method remains correct and is unchanged.
+        $totals = ['income' => 0, 'expenses' => 0];
+        $stmt_income = $this->db->prepare("SELECT SUM(amount) as total FROM recurring_rules WHERE to_account_id = ? AND type = 'income' AND (end_date IS NULL OR end_date >= CURDATE())");
         $stmt_income->execute([$account_id]);
-        $result_income = $stmt_income->fetch();
-        if ($result_income && $result_income['total']) {
-            $totals['income'] = (float) $result_income['total'];
-        }
-
-        $stmt_expenses = $this->db->prepare(
-            "SELECT SUM(amount) as total FROM recurring_rules WHERE from_account_id = ? AND type = 'expense' AND (end_date IS NULL OR end_date >= CURDATE())"
-        );
+        if ($row = $stmt_income->fetch()) { $totals['income'] = (float) $row['total']; }
+        $stmt_expenses = $this->db->prepare("SELECT SUM(amount) as total FROM recurring_rules WHERE from_account_id = ? AND type IN ('expense', 'transfer') AND (end_date IS NULL OR end_date >= CURDATE())");
         $stmt_expenses->execute([$account_id]);
-        $result_expenses = $stmt_expenses->fetch();
-        if ($result_expenses && $result_expenses['total']) {
-            $totals['expenses'] = (float) $result_expenses['total'];
-        }
-        
-        $stmt_transfers = $this->db->prepare(
-            "SELECT SUM(amount) as total FROM recurring_rules WHERE from_account_id = ? AND type = 'transfer' AND (end_date IS NULL OR end_date >= CURDATE())"
-        );
-        $stmt_transfers->execute([$account_id]);
-        $result_transfers = $stmt_transfers->fetch();
-        if ($result_transfers && $result_transfers['total']) {
-            $totals['expenses'] += (float) $result_transfers['total'];
-        }
-
+        if ($row = $stmt_expenses->fetch()) { $totals['expenses'] = (float) $row['total']; }
         return $totals;
     }
 
@@ -83,47 +131,5 @@ class RecurringRule {
         $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE user_id = ? ORDER BY start_date DESC LIMIT ?, ?");
         $stmt->execute([$user_id, $offset, $limit]);
         return $stmt->fetchAll();
-    }
-
-    public static function calculateNextDueDate(array $rule, $after_date = 'today') {
-        try {
-            $startDate = new DateTime($rule['start_date']);
-            $after = new DateTime($after_date);
-            
-            if ($rule['end_date'] && new DateTime($rule['end_date']) < $after) {
-                return null;
-            }
-            
-            $nextDate = clone $startDate;
-            
-            while ($nextDate <= $after) {
-                 $nextDate = self::calculateNextDateForRule($nextDate, $rule);
-                 if ($nextDate === null) return null;
-            }
-
-            return $nextDate;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-    
-    /**
-     * -- FIX: Changed from private to public so other models can access it. --
-     */
-    public static function calculateNextDateForRule(DateTime $current, array $rule) {
-        $next_date = clone $current;
-        $interval_value = (int)$rule['interval_value'] > 0 ? (int)$rule['interval_value'] : 1;
-        
-        switch ($rule['frequency']) {
-            case 'daily':
-                return $next_date->modify("+$interval_value day");
-            case 'weekly':
-                return $next_date->modify("+$interval_value week");
-            case 'monthly':
-                return $next_date->modify("+$interval_value month");
-            case 'yearly':
-                return $next_date->modify("+$interval_value year");
-        }
-        return null;
     }
 }
