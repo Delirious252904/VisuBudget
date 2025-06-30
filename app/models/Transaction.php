@@ -66,7 +66,7 @@ class Transaction {
                           WHERE user_id = :user_id 
                             AND (type = 'expense' OR type = 'transfer')
                             AND transaction_date > :start_date 
-                            AND transaction_date <= :end_date";
+                            AND transaction_date < :end_date";
     
         $stmt_generated = $this->db->prepare($sql_generated);
         $stmt_generated->execute([
