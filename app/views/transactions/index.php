@@ -17,30 +17,25 @@
                 <tr>
                     <th class="p-3">Date</th>
                     <th class="p-3">Description</th>
-                    <th class="p-3">Type</th>
                     <th class="p-3 text-right">Amount</th>
-                    <th class="p-3 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($transactions)): ?>
                     <tr>
-                        <td colspan="5" class="text-center text-gray-400 py-8">No transactions found.</td>
+                        <td colspan="4" class="text-center text-gray-400 py-8">No transactions found.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($transactions as $tx): ?>
-                        <tr class="border-b border-gray-700">
-                            <td class="p-3 whitespace-nowrap"><?php echo (new DateTime($tx['transaction_date']))->format('M j, Y'); ?></td>
+                        <tr 
+                            id="transaction-<?php echo $tx['transaction_id']; ?>" 
+                            class="border-b border-gray-700 hover:bg-gray-700 cursor-pointer"
+                            onclick="window.location.href='/transaction/edit/<?php echo $tx['transaction_id']; ?>';"
+                        >
+                            <td class="p-3 whitespace-nowrap"><?php echo (new DateTime($tx['transaction_date']))->format('M jS'); ?></td>
                             <td class="p-3"><?php echo htmlspecialchars($tx['description']); ?></td>
-                            <td class="p-3 capitalize"><?php echo htmlspecialchars($tx['type']); ?></td>
-                            <td class="p-3 text-right font-mono <?php echo $tx['type'] === 'income' ? 'text-green-400' : ($tx['type'] === 'transfer' ? 'text-gray-300' : 'text-red-400'); ?>">
+                            <td class="p-3 text-right <?php echo $tx['type'] === 'income' ? 'text-green-400' : ($tx['type'] === 'transfer' ? 'text-gray-300' : 'text-red-400'); ?>">
                                 £<?php echo number_format($tx['amount'], 2); ?>
-                            </td>
-                            <td class="p-3 text-right whitespace-nowrap">
-                                <a href="/transaction/edit/<?php echo $tx['transaction_id']; ?>" class="text-blue-400 hover:text-blue-300 mr-4">Edit</a>
-                                <form action="/transaction/delete/<?php echo $tx['transaction_id']; ?>" method="POST" class="inline-block js-delete-form">
-                                    <button type="submit" class="text-red-400 hover:text-red-300 bg-transparent border-none p-0 cursor-pointer font-medium">Delete</button>
-                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

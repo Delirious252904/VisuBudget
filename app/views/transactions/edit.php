@@ -1,9 +1,8 @@
-<!-- -------------------------------------------------- -->
-<!-- File: app/views/transactions/edit.php                -->
-<!-- This is the form for editing a single transaction. -->
-<!-- -------------------------------------------------- -->
+<!-- app/views/transactions/edit.php -->
 <section class="bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 max-w-lg mx-auto">
     <h2 class="text-2xl font-bold mb-6">Edit Transaction</h2>
+    
+    <!-- Update Form -->
     <form action="/transaction/edit/<?php echo $transaction['transaction_id']; ?>" method="POST">
         
         <div class="mb-4">
@@ -21,11 +20,21 @@
             <input type="date" name="transaction_date" id="transaction_date" class="form-input" value="<?php echo htmlspecialchars($transaction['transaction_date']); ?>" required>
         </div>
         
-        <p class="text-xs text-gray-500 mb-6 text-center">Note: The transaction type and associated accounts cannot be changed after creation. To change these, please delete this transaction and create a new one.</p>
+        <p class="text-xs text-gray-500 mb-6 text-center">Note: The transaction type and accounts cannot be changed. To modify these, please delete this transaction and create a new one.</p>
         
-        <div class="flex items-center justify-end space-x-4">
-             <a href="/transactions" class="text-gray-400 hover:text-white">Cancel</a>
-            <button type="submit" class="btn btn-primary">Update Transaction</button>
+        <div class="flex items-center justify-between">
+            <!-- Delete Button Form -->
+            <form action="/transaction/delete/<?php echo $transaction['transaction_id']; ?>" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this transaction?');">
+                <button type="submit" class="btn bg-red-600 hover:bg-red-500 text-white">
+                    <i class="fas fa-trash-alt mr-2"></i>Delete
+                </button>
+            </form>
+            
+            <!-- Update and Cancel Buttons -->
+            <div class="flex items-center space-x-4">
+                <a href="/transactions" class="text-gray-400 hover:text-white">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Transaction</button>
+            </div>
         </div>
     </form>
 </section>

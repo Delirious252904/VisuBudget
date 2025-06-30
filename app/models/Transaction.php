@@ -265,20 +265,21 @@ class Transaction {
         $stmt->execute([$transaction_id, $user_id]);
         return $stmt->fetch();
     }
-    
+       
+
     /**
-     * Fetches all transactions for a user, paginated, with correct sorting.
+     * -- FIXED --
+     * Fetches all transactions for a user, paginated, with correct account names.
      */
     public function findAllByUserIdWithPagination($user_id, $offset, $limit)
     {
         $stmt = $this->db->prepare("
-            SELECT t.*, a_from.name as from_account_name, a_to.name as to_account_name,
-                   CASE WHEN t.type != 'transfer' THEN COALESCE(a_from.name, a_to.name) ELSE NULL END as account_name
+            SELECT t.*, a_from.account_name as from_account_name, a_to.account_name as to_account_name
             FROM transactions t
             LEFT JOIN accounts a_from ON t.from_account_id = a_from.account_id
             LEFT JOIN accounts a_to ON t.to_account_id = a_to.account_id
             WHERE t.user_id = :user_id
-            ORDER BY t.transaction_date DESC, t.type DESC
+            ORDER BY t.transaction_date DESC, t.transaction_id DESC, t.type DESC
             LIMIT :limit OFFSET :offset
         ");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
