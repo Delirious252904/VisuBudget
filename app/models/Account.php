@@ -1,12 +1,15 @@
 <?php
 // app/models/Account.php
 namespace models;
+use Flight;
 
 class Account {
     protected $db;
 
-    public function __construct() {
-        $this->db = \Flight::db();
+    public function __construct($db = null)
+    {
+        // If a DB connection is passed, use it. Otherwise, get it from the Flight registry.
+        $this->db = $db ?: \Flight::db();
     }
     
     /**

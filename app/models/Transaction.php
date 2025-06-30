@@ -3,6 +3,7 @@
 namespace models;
 
 use models\RecurringRule;
+use Flight;
 use PDO;
 use DateTime;
 

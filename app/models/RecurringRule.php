@@ -1,6 +1,7 @@
 <?php
 // app/models/RecurringRule.php
 namespace models;
+use Flight;
 use PDO;
 use DateTime;
 

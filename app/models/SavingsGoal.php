@@ -3,14 +3,16 @@
 namespace models;
 
 use PDO;
+use Flight;
 
 class SavingsGoal {
     protected $db;
 
-    public function __construct() {
-        $this->db = \Flight::db();
+    public function __construct($db = null)
+    {
+        // If a DB connection is passed, use it. Otherwise, get it from the Flight registry.
+        $this->db = $db ?: \Flight::db();
     }
-
     /**
      * Finds all savings goals for a specific user.
      */
