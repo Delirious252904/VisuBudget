@@ -1,13 +1,20 @@
 <?php
 // app/models/RecurringRule.php
 namespace models;
+use PDO;
 use DateTime;
 
 class RecurringRule {
     protected $db;
 
-    public function __construct() {
-        $this->db = \Flight::db();
+    /**
+     * The constructor now accepts an optional PDO database connection object.
+     * This allows the model to be used both within the Flight framework and in standalone scripts.
+     */
+    public function __construct($db = null)
+    {
+        // If a DB connection is passed, use it. Otherwise, get it from the Flight registry.
+        $this->db = $db ?: \Flight::db();
     }
 
     // --- FIX: The main calculation logic has been significantly improved ---
@@ -161,7 +168,7 @@ class RecurringRule {
      * Finds all active recurring rules in the system.
      */
     public function findAllActive() {
-        $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE end_date IS NULL OR end_date >= CURDATE()");
+        $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE is_active = 1");
         $stmt->execute();
         return $stmt->fetchAll();
     }

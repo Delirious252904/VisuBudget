@@ -1,107 +1,118 @@
 <?php
-// cron/generate_recurring.php
-// This script is designed to be run automatically by a cron job once per day.
 
-// Autoloader and Configuration
-require_once __DIR__ . '/../private/vendor/autoload.php';
+/**
+ * VisuBudget Recurring Transaction Generator
+ *
+ * This cron script is designed to be run once per day.
+ * It finds all active recurring transaction rules and generates any
+ * upcoming transactions that are due within the next 3 months.
+ *
+ * @author Gemini
+ * @version 3.2.0
+ */
 
-// --- FIX: We now include the necessary models directly ---
-// This ensures we use the correct, centralized logic.
-spl_autoload_register(function ($class_name) {
-    $base_dir = __DIR__ . '/../private/app/';
-    $file = $base_dir . str_replace('\\', '/', $class_name) . '.php';
-    if (file_exists($file)) {
-        require_once $file;
-    }
-});
+// Bootstrap the application environment
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../app/models/RecurringRule.php';
+require_once __DIR__ . '/../app/models/Transaction.php';
 
-echo "Starting recurring transaction generation...\n";
-
-// --- 1. BOOTSTRAP a minimal environment ---
-$db_host = 'mysql-200-139.mysql.prositehosting.net';
-$db_name = 'visubudget';
-$db_user = 'visubudget';
-$db_pass = 'vbuser7623';
-
+// Load environment variables from the .env file in the parent directory
 try {
-    $db = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    
-    // Pass the database connection to the Flight registry so models can use it.
-    Flight::register('db', function() use ($db){
-        return $db;
-    });
-
-} catch (PDOException $e) {
-    error_log("ERROR: Could not connect to the database. " . $e->getMessage());
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+} catch (\Dotenv\Exception\InvalidPathException $e) {
+    $log_message = "CRON ERROR: Could not find the .env file. " . $e->getMessage() . "\n";
+    error_log($log_message, 3, __DIR__ . '/cron.log');
+    echo $log_message;
     exit(1);
 }
 
-// --- 2. LOGIC ---
-$ruleModel = new \models\RecurringRule();
-$active_rules = $ruleModel->findAllActive(); // A new, cleaner method in the model
+echo "Starting recurring transaction generation...\n";
 
+// --- 1. Database Connection & Setup ---
+try {
+    $db_host = $_ENV['DB_HOST'];
+    $db_name = $_ENV['DB_NAME'];
+    $db_user = $_ENV['DB_USER'];
+    $db_pass = $_ENV['DB_PASS'];
+
+    $db = new PDO(
+        "mysql:host={$db_host};dbname={$db_name};charset=utf8mb4",
+        $db_user,
+        $db_pass
+    );
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    $log_message = "CRON ERROR: Could not connect to the database. " . $e->getMessage() . "\n";
+    error_log($log_message, 3, __DIR__ . '/cron.log');
+    echo $log_message;
+    exit(1);
+} catch (\Throwable $th) {
+    $log_message = "CRON ERROR: A required database environment variable is missing in your .env file (DB_HOST, DB_NAME, DB_USER, DB_PASS). " . $th->getMessage() . "\n";
+    error_log($log_message, 3, __DIR__ . '/cron.log');
+    echo $log_message;
+    exit(1);
+}
+
+
+// --- 2. Core Generation Logic ---
+$ruleModel = new \models\RecurringRule($db);
+$transactionModel = new \models\Transaction($db);
+
+$active_rules = $ruleModel->findAllActive();
 echo "Found " . count($active_rules) . " active rules to process.\n";
 
 $transactions_created = 0;
-$today = new DateTime('today');
+$look_ahead_date = new DateTime('now + 3 months');
 
 foreach ($active_rules as $rule) {
-    $look_ahead_date = new DateTime('now + 3 months');
-    
-    $last_gen_stmt = $db->prepare("SELECT MAX(transaction_date) as last_date FROM transactions WHERE rule_id = ?");
-    $last_gen_stmt->execute([$rule['rule_id']]);
-    $last_date_str = $last_gen_stmt->fetchColumn();
-    
-    $next_date = $last_date_str ? new DateTime($last_date_str) : new DateTime($rule['start_date']);
-    
-    if($last_date_str === null && $next_date < $today) {
-        // If no transactions exist and start date is in the past, start generating from today
+    echo "Processing rule ID: {$rule['rule_id']} '{$rule['description']}'\n";
+
+    // --- FIX: Determine the first date we need to check ---
+    $last_date_str = $transactionModel->findLatestDateByRuleId($rule['rule_id']);
+    $next_date_to_check = null;
+
+    if ($last_date_str) {
+        $last_date = new DateTime($last_date_str);
+        $next_date_to_check = \models\RecurringRule::calculateNextDateForRule($last_date, $rule);
+        echo "  - Last transaction on {$last_date->format('Y-m-d')}. Next date to check is " . ($next_date_to_check ? $next_date_to_check->format('Y-m-d') : 'N/A') . ".\n";
     } else {
-        // Otherwise, start from the last generated date
-        $next_date = new DateTime($last_date_str);
+        $next_date_to_check = new DateTime($rule['start_date']);
+        echo "  - No previous transactions. First date to check is {$next_date_to_check->format('Y-m-d')}.\n";
     }
 
-
-    while ($next_date <= $look_ahead_date) {
-        
-        // --- FIX: Use the robust, centralized method from the model ---
-        $next_date = \models\RecurringRule::calculateNextDateForRule($next_date, $rule);
-
-        if ($next_date === null || $next_date > $look_ahead_date) {
+    // --- FIX: Unified loop to generate all necessary transactions ---
+    while ($next_date_to_check !== null && $next_date_to_check <= $look_ahead_date) {
+        // Stop if the rule has a specific end date and we've passed it.
+        if ($rule['end_date'] && $next_date_to_check > new DateTime($rule['end_date'])) {
+            echo "  - Reached rule end date.\n";
             break;
         }
 
-        // --- CHECK END CONDITIONS ---
-        if ($rule['end_date'] && $next_date > new DateTime($rule['end_date'])) {
-            break; 
+        // Stop if the rule has a maximum number of occurrences and we've reached it.
+        if ($rule['occurrences'] > 0) {
+            $occurrence_count = $transactionModel->countByRuleId($rule['rule_id']);
+            if ($occurrence_count >= $rule['occurrences']) {
+                echo "  - Reached max occurrences ({$rule['occurrences']}).\n";
+                break;
+            }
         }
         
-        $occurrences_count_stmt = $db->prepare("SELECT COUNT(*) FROM transactions WHERE rule_id = ?");
-        $occurrences_count_stmt->execute([$rule['rule_id']]);
-        if ($rule['occurrences'] > 0 && (int)$occurrences_count_stmt->fetchColumn() >= $rule['occurrences']) {
-            break;
-        }
-        
-        $exists_stmt = $db->prepare("SELECT COUNT(*) FROM transactions WHERE rule_id = ? AND transaction_date = ?");
-        $exists_stmt->execute([$rule['rule_id'], $next_date->format('Y-m-d')]);
-
-        if ($exists_stmt->fetchColumn() == 0) {
-             // --- FIX: Removed the non-existent 'is_recurring' column ---
-             $insert_stmt = $db->prepare(
-                "INSERT INTO transactions (user_id, rule_id, description, amount, type, from_account_id, to_account_id, transaction_date)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            );
-            $insert_stmt->execute([
-                $rule['user_id'], $rule['rule_id'], $rule['description'], $rule['amount'], $rule['type'],
-                $rule['from_account_id'], $rule['to_account_id'], $next_date->format('Y-m-d')
-            ]);
+        // Check for existence before creating to prevent duplicates.
+        if (!$transactionModel->existsByRuleIdAndDate($rule['rule_id'], $next_date_to_check->format('Y-m-d'))) {
+            $transactionModel->createFromRule($rule, $next_date_to_check->format('Y-m-d'));
             $transactions_created++;
-            echo "  -> Generated transaction for '{$rule['description']}' on " . $next_date->format('Y-m-d') . "\n";
+            echo "  -> Generated transaction for " . $next_date_to_check->format('Y-m-d') . "\n";
         }
+
+        // Calculate the *next* potential date for the next loop iteration.
+        $next_date_to_check = \models\RecurringRule::calculateNextDateForRule($next_date_to_check, $rule);
     }
+    echo "  - Finished processing rule ID: {$rule['rule_id']}.\n";
 }
 
-echo "Finished. Created $transactions_created new transactions.\n";
-// The local calculate_next_date_from_rule function has been removed.
+$summary_message = "Finished. Created $transactions_created new transactions.\n";
+error_log($summary_message, 3, __DIR__ . '/cron.log');
+echo $summary_message;

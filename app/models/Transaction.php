@@ -9,8 +9,14 @@ use DateTime;
 class Transaction {
     protected $db;
 
-    public function __construct() {
-        $this->db = \Flight::db();
+    /**
+     * The constructor now accepts an optional PDO database connection object.
+     * This allows the model to be used both within the Flight framework and in standalone scripts.
+     */
+    public function __construct($db = null)
+    {
+        // If a DB connection is passed, use it. Otherwise, get it from the Flight registry.
+        $this->db = $db ?: \Flight::db();
     }
 
     public function findNextIncomeEvent($user_id) {
@@ -373,5 +379,35 @@ class Transaction {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM transactions WHERE user_id = ?");
         $stmt->execute([$user_id]);
         return (int)$stmt->fetchColumn();
+    }
+
+    public function findLatestDateByRuleId($rule_id) {
+        $stmt = $this->db->prepare("SELECT MAX(transaction_date) FROM transactions WHERE rule_id = ?");
+        $stmt->execute([$rule_id]);
+        return $stmt->fetchColumn();
+    }
+
+    public function countByRuleId($rule_id) {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM transactions WHERE rule_id = ?");
+        $stmt->execute([$rule_id]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function existsByRuleIdAndDate($rule_id, $date) {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM transactions WHERE rule_id = ? AND transaction_date = ?");
+        $stmt->execute([$rule_id, $date]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    public function createFromRule($rule, $date) {
+        $stmt = $this->db->prepare(
+            "INSERT INTO transactions (user_id, rule_id, description, amount, type, from_account_id, to_account_id, transaction_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->execute([
+            $rule['user_id'], $rule['rule_id'], $rule['description'], $rule['amount'], $rule['type'],
+            $rule['from_account_id'], $rule['to_account_id'], $date
+        ]);
+        return $this->db->lastInsertId();
     }
 }
