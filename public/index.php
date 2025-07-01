@@ -3,6 +3,7 @@
  * VisuBudget - Front Controller
  */
 session_start();
+require_once __DIR__ . '/../app/controllers/ErrorController.php';
 
 // --- 1. BOOTSTRAPPING & CONFIGURATION ---
 require '../private/vendor/autoload.php';
@@ -20,6 +21,7 @@ spl_autoload_register(function ($class_name) {
         require $file;
     }
 });
+
 
 
 // --- 2. FLIGHT SETUP ---
@@ -55,6 +57,16 @@ Flight::map('getFlashes', function(){
         return $flashes;
     }
     return [];
+});
+
+// Custom Error Handling
+Flight::map('error', function(\Throwable $ex){
+    // Log the full error to your server's error log for your own debugging
+    error_log($ex->getMessage() . " in " . $ex->getFile() . " on line " . $ex->getLine());
+
+    // Create an instance of our new controller and call the display method
+    $errorController = new \controllers\ErrorController();
+    $errorController->display_error($ex);
 });
 
 // --- 3. MIDDLEWARE (The Gatekeeper) ---
@@ -141,6 +153,7 @@ Flight::route('GET /privacy', function() { (new controllers\LegalController())->
 Flight::route('GET /cookies', function() { (new controllers\LegalController())->showCookies(); });
 Flight::route('GET /pricing', function() { (new controllers\SubscriptionController())->showPricingPage(); });
 Flight::route('POST /request-beta-access', function() { (new controllers\ContactController())->handleBetaRequest(); });
+Flight::route('POST /error/send-report', ['\controllers\ErrorController', 'send_report']);
 
 // -- Protected Routes --
 Flight::route('GET /dashboard', function() { (new controllers\ViewController())->dashboard(); });

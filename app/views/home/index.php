@@ -135,6 +135,7 @@
             <div class="container mx-auto px-6 max-w-xl text-center">
                 <h2 class="text-3xl md:text-4xl font-bold mb-4">Request Your Invitation</h2>
                 <p class="text-lg text-gray-400 mb-8">Interested in joining our closed beta? Fill out the form below, and we'll be in touch if you're a good fit for our current testing phase.</p>
+                <p class="text-2xl font-bold text-blue-400 mb-6">As part of the Closed Beta, you will be upgraded to Premium for 12 months, so you can experience unlimited access.</p>
                 
                 <!-- This is our new contact form -->
                 <form action="/request-beta-access" method="POST">
