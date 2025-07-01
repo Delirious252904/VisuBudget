@@ -131,7 +131,7 @@ class Transaction {
             WHERE user_id = :user_id 
               AND transaction_date >= CURDATE()
               AND rule_id IS NULL
-            ORDER BY transaction_date ASC
+            ORDER BY transaction_date DESC
             LIMIT :limit
         ");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
@@ -285,8 +285,8 @@ class Transaction {
             FROM transactions t
             LEFT JOIN accounts a_from ON t.from_account_id = a_from.account_id
             LEFT JOIN accounts a_to ON t.to_account_id = a_to.account_id
-            WHERE t.user_id = :user_id
-            ORDER BY t.transaction_date DESC, t.transaction_id DESC, t.type DESC
+            WHERE t.user_id = :user_id AND t.transaction_date >= CURDATE()  -- Exclude previous transactions
+            ORDER BY t.transaction_date ASC, t.transaction_id DESC, t.type DESC
             LIMIT :limit OFFSET :offset
         ");
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
