@@ -65,13 +65,14 @@ class TransactionController extends ViewController {
                 $data = $model->findByIdAndUserId($id, $user_id);
                 if ($data) {
                     $data['is_recurring'] = false;
+                    $data['id'] = $id;
                 }
             } elseif ($type === 'recurring') {
                 $model = new RecurringRule();
                 $data = $model->findByIdAndUserId($id, $user_id);
                 if ($data) {
-                    $data['id'] = $data['rule_id']; // Alias rule_id to id for the form
                     $data['is_recurring'] = true;
+                    $data['id'] = $id; 
                 }
             }
         }
