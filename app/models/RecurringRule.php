@@ -29,6 +29,12 @@ class RecurringRule {
         return $stmt->fetchAll();
     }
 
+    public function findAllByUserId($user_id) {
+        $stmt = $this->db->prepare("SELECT * FROM recurring_rules WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll();
+    }
+
     /**
      * FIX: Added the missing countByUserId method needed for pagination.
      */
@@ -114,5 +120,37 @@ class RecurringRule {
                 return null;
         }
         return $next_date;
+    }
+
+    /**
+     * Calculates the next occurrence of a rule AFTER a given date.
+     *
+     * @param array $rule The recurring rule data.
+     * @param string $after_date_str The date to calculate from (defaults to 'today').
+     * @return DateTime|null The next due date, or null if none.
+     */
+    public static function calculateNextDueDate(array $rule, $after_date_str = 'today') {
+        try {
+            $current = new DateTime($rule['start_date']);
+            $after = new DateTime($after_date_str);
+
+            // Fast-forward until the date is on or after our start point
+            while ($current < $after) {
+                $current = self::calculateNextDateForRule($current, $rule);
+                if ($current === null) return null;
+            }
+
+            // If the rule's start date is in the future, it's the next due date.
+            if ($current > $after) {
+                 return $rule['end_date'] && $current > new DateTime($rule['end_date']) ? null : $current;
+            }
+
+            // If we land exactly on the 'after' date, we need the *next* one
+            $next = self::calculateNextDateForRule($current, $rule);
+            return $rule['end_date'] && $next > new DateTime($rule['end_date']) ? null : $next;
+
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }
