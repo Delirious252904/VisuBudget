@@ -153,4 +153,24 @@ class RecurringRule {
             return null;
         }
     }
+
+    /**
+     * FIX: Restored the missing method.
+     * Calculates the total monthly recurring income and expenses for a specific account.
+     */
+    public function getMonthlyTotalsForAccount($account_id) {
+        $totals = ['income' => 0, 'expenses' => 0];
+        
+        // Calculate total recurring income for the account
+        $stmt_income = $this->db->prepare("SELECT SUM(amount) as total FROM recurring_rules WHERE to_account_id = ? AND type = 'income' AND is_active = 1");
+        $stmt_income->execute([$account_id]);
+        if ($row = $stmt_income->fetch()) { $totals['income'] = (float) $row['total']; }
+
+        // Calculate total recurring expenses for the account
+        $stmt_expenses = $this->db->prepare("SELECT SUM(amount) as total FROM recurring_rules WHERE from_account_id = ? AND type = 'expense' AND is_active = 1");
+        $stmt_expenses->execute([$account_id]);
+        if ($row = $stmt_expenses->fetch()) { $totals['expenses'] = (float) $row['total']; }
+
+        return $totals;
+    }
 }
