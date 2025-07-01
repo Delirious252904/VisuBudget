@@ -36,7 +36,7 @@
                             </td>
                             <td class="p-3">
                                 <!-- We'll add logic to calculate this accurately later -->
-                                <?php echo (new DateTime($rule['start_date']))->format('M j, Y'); ?>
+                                <?php echo (new DateTime($rule['start_date']))->format('M jS'); ?>
                             </td>
                             <td class="p-3 text-right">
                                 <a href="/recurring/edit/<?php echo $rule['rule_id']; ?>" class="text-blue-400 hover:text-blue-300 mr-4"><i class="fas fa-edit"></i></a>

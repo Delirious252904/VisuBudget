@@ -184,7 +184,7 @@ Flight::route('POST /transaction/update/@id', function($id) { (new controllers\T
 Flight::route('POST /transaction/delete/@id', function($id) { (new controllers\TransactionController())->delete($id); });
 
 // Routes for managing the list of recurring rules
-Flight::route('GET /recurring', function() { (new controllers\RecurringController())->showList(); });
+Flight::route('GET /recurring', function() { (new controllers\RecurringController())->index(); });
 Flight::route('GET /recurring/edit/@id', function($id) { (new controllers\RecurringController())->showEditForm($id); });
 Flight::route('POST /recurring/update/@id',function($id) { (new controllers\RecurringController())->update($id); });
 Flight::route('POST /recurring/delete/@id', function($id) { (new controllers\RecurringController())->delete($id); });

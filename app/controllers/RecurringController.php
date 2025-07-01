@@ -2,11 +2,38 @@
 // app/controllers/RecurringController.php
 namespace controllers;
 
+use Flight;
 use models\RecurringRule;
 use models\Account;
 use models\Transaction;
 
 class RecurringController extends ViewController {
+
+    /**
+     * Shows a list of all recurring rules for the logged-in user.
+     * This method fetches all rules and their associated accounts, then renders the view.
+     */
+    public function index() {
+        $user_id = $this->getUserId();
+        $ruleModel = new RecurringRule();
+
+        // Pagination settings
+        $limit = 10; // Number of rules per page
+        $page = (int) (Flight::request()->query->page ?? 1);
+        $offset = ($page - 1) * $limit;
+
+        // Fetch paginated rules and the total count for pagination links
+        $rules = $ruleModel->findAllByUserIdWithPagination($user_id, $offset, $limit);
+        $total_rules = $ruleModel->countByUserId($user_id);
+        $total_pages = ceil($total_rules / $limit);
+
+        // Pass all necessary data to the view
+        $this->render('recurring/index', [
+            'rules' => $rules,
+            'currentPage' => $page,
+            'totalPages' => $total_pages
+        ]);
+    }
 
     /**
      * Shows the form for editing a specific recurring rule.
