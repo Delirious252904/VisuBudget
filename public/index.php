@@ -5,6 +5,7 @@
 session_start();
 require_once __DIR__ . '/../private/app/controllers/ErrorController.php';
 
+
 // --- 1. BOOTSTRAPPING & CONFIGURATION ---
 require '../private/vendor/autoload.php';
 
@@ -175,19 +176,19 @@ Flight::route('POST /account/delete/@id', function($id) { (new controllers\Accou
 Flight::route('GET /account/reset/@id', function($id) { (new controllers\AccountController())->showResetForm($id); });
 Flight::route('POST /account/reset/@id', function($id) { (new controllers\AccountController())->handleResetBalance($id); });
 
-// All transaction and recurring rule creation now goes through a single form and controller.
-Flight::route('GET /transactions', function() { (new controllers\TransactionController())->showList(); });
-Flight::route('GET /transaction/add', function() { (new controllers\TransactionController())->showAddForm(); });
-Flight::route('POST /transaction/add', function() { (new controllers\TransactionController())->create(); });
-Flight::route('GET /transaction/edit/@id', function($id) { (new controllers\TransactionController())->showEditForm($id); });
-Flight::route('POST /transaction/update/@id', function($id) { (new controllers\TransactionController())->update($id); });
-Flight::route('POST /transaction/delete/@id', function($id) { (new controllers\TransactionController())->delete($id); });
+// List pages
+Flight::route('GET /transactions', function() { (new \controllers\TransactionController())->index(); });
+Flight::route('GET /recurring', function() { (new \controllers\RecurringController())->index(); });
 
-// Routes for managing the list of recurring rules
-Flight::route('GET /recurring', function() { (new controllers\RecurringController())->index(); });
-Flight::route('GET /recurring/edit/@id', function($id) { (new controllers\RecurringController())->showEditForm($id); });
-Flight::route('POST /recurring/update/@id',function($id) { (new controllers\RecurringController())->update($id); });
-Flight::route('POST /recurring/delete/@id', function($id) { (new controllers\RecurringController())->delete($id); });
+// Unified form routes
+Flight::route('GET /transaction/add', function(){ (new \controllers\TransactionController())->showForm(); });
+Flight::route('GET /transaction/edit/@id', function($id){ (new \controllers\TransactionController())->showForm('transaction', $id); });
+Flight::route('GET /recurring/edit/@id', function($id){ (new \controllers\TransactionController())->showForm('recurring', $id); });
+
+// Unified save and delete routes
+Flight::route('POST /transaction/save', function(){ (new \controllers\TransactionController())->save(); });
+Flight::route('POST /transaction/delete', function(){ (new \controllers\TransactionController())->delete(); });
+
 
 Flight::route('POST /notifications/subscribe', function() { (new controllers\NotificationController())->subscribe(); });
 

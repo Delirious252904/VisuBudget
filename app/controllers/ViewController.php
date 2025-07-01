@@ -64,7 +64,7 @@ class ViewController {
         $upcomingEvents = [];
         $look_ahead_date = new DateTime('+3 months');
 
-        $rules = $ruleModel->findAllByUserId($user_id);
+        $rules = $ruleModel->findAllActiveByUserId($user_id);
         foreach ($rules as $rule) {
             $nextDate = RecurringRule::calculateNextDueDate($rule);
             if ($nextDate && $nextDate <= $look_ahead_date) {
@@ -99,7 +99,7 @@ class ViewController {
         $finalSafeToSpend = $totalBalance;
 
         if ($nextIncomeEvent) {
-            $nextIncomeDate = new DateTime($nextIncomeEvent['date']);
+            $nextIncomeDate = new DateTime($nextIncomeEvent['next_date']);
             $nextIncomeAmount = (float)$nextIncomeEvent['amount'];
             $today = new DateTime('today');
             $totalExpensesUntilNextIncome = $transactionModel->getExpensesTotalBetweenDates($user_id, $today->format('Y-m-d'), $nextIncomeDate->format('Y-m-d'));

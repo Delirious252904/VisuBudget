@@ -44,7 +44,7 @@ class RecurringController extends ViewController {
         $ruleModel = new RecurringRule();
         
         // Find the specific rule, ensuring it belongs to the logged-in user.
-        $rule = $ruleModel->findById($rule_id, $user_id);
+        $rule = $ruleModel->findByIdAndUserId($rule_id, $user_id);
 
         if (!$rule) {
             // If the rule doesn't exist or doesn't belong to the user, show an error.
@@ -68,7 +68,7 @@ class RecurringController extends ViewController {
         $ruleModel = new RecurringRule();
         
         // First, check if the user actually owns this rule.
-        if (!$ruleModel->findById($rule_id, $user_id)) {
+        if (!$ruleModel->findByIdAndUserId($rule_id, $user_id)) {
             $this->render('auth/message', ['title' => 'Error', 'message' => 'You do not have permission to edit this rule.']);
             return;
         }
