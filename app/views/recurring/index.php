@@ -28,7 +28,7 @@
                     </tr>
                 <?php else: ?>
                     <?php foreach ($rules as $rule): ?>
-                        <tr class="border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer" data-href="/recurring/edit/<?php echo $rule['rule_id']; ?>">
+                        <tr class=\"border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer\" data-href=\"/transaction/edit/recurring/\u003c?php echo $rule['rule_id']; ?\u003e\">
                             <td class="p-3"><?php echo htmlspecialchars($rule['description']); ?></td>
                             <td class="p-3 text-right <?php echo ($rule['type'] === 'income') ? 'text-green-400' : 'text-red-400'; ?>">
                                 <?php echo '£' . number_format($rule['amount'], 2); ?>
