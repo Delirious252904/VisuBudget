@@ -6,6 +6,14 @@ use core\Mailer;
 use models\User;
 
 class ErrorController {
+    /**
+     * The constructor now accepts an optional PDO database connection object.
+     * This allows the model to be used both within the Flight framework and in standalone scripts.
+     */
+    public function __construct($db = null)
+    {
+        // This model doesn't use the DB, but we add the constructor for consistency.
+    }
 
     /**
      * Renders the custom error page.
@@ -16,7 +24,9 @@ class ErrorController {
         // Attempt to get the logged-in user's details to pre-fill the form
         $user = null;
         if (isset($_SESSION['user_id'])) {
-            $userModel = new User(Flight::db());
+            // We need a DB connection to get user details
+            $db = Flight::db();
+            $userModel = new User($db);
             $user = $userModel->findById($_SESSION['user_id']);
         }
 
@@ -29,8 +39,9 @@ class ErrorController {
             'user' => $user
         ];
         
-        // Render the error view without the standard header/footer
-        Flight::render('error/index', ['error_data' => $error_data], false);
+        // --- FIX: Render the error view without the third 'false' parameter ---
+        // This is the correct way to render a view without a layout in Flight.
+        Flight::render('error/index', ['error_data' => $error_data]);
     }
 
     /**

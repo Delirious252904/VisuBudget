@@ -3,7 +3,7 @@
  * VisuBudget - Front Controller
  */
 session_start();
-require_once __DIR__ . '/../app/controllers/ErrorController.php';
+require_once __DIR__ . '/../private/app/controllers/ErrorController.php';
 
 // --- 1. BOOTSTRAPPING & CONFIGURATION ---
 require '../private/vendor/autoload.php';
@@ -75,8 +75,9 @@ $public_routes = [
     '/forgot-password', '/reset-password',
     '/terms', '/privacy', '/cookies', '/pricing',
     '/request-beta-access',
-    '/about', '/contact'
+    '/about', '/contact', '/error'
 ];
+
 $premium_routes = ['/savings', '/contribute'];
 $admin_routes = ['/admin'];
 
@@ -153,7 +154,9 @@ Flight::route('GET /privacy', function() { (new controllers\LegalController())->
 Flight::route('GET /cookies', function() { (new controllers\LegalController())->showCookies(); });
 Flight::route('GET /pricing', function() { (new controllers\SubscriptionController())->showPricingPage(); });
 Flight::route('POST /request-beta-access', function() { (new controllers\ContactController())->handleBetaRequest(); });
-Flight::route('POST /error/send-report', ['\controllers\ErrorController', 'send_report']);
+// Error handling route
+Flight::route('GET /error', function() { (new \controllers\ErrorController())->display_error(); });
+Flight::route('POST /error/send-report', function(){ (new \controllers\ErrorController())->send_report(); });
 
 // -- Protected Routes --
 Flight::route('GET /dashboard', function() { (new controllers\ViewController())->dashboard(); });
