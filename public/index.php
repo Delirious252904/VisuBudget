@@ -182,8 +182,8 @@ Flight::route('GET /recurring', function() { (new \controllers\RecurringControll
 
 // Unified form routes
 Flight::route('GET /transaction/add', function(){ (new \controllers\TransactionController())->showForm(); });
-Flight::route('GET /transaction/edit/@id', function($id){ (new \controllers\TransactionController())->showForm('transaction', $id); });
-Flight::route('GET /recurring/edit/@id', function($id){ (new \controllers\TransactionController())->showForm('recurring', $id); });
+Flight::route('GET /transaction/edit/transaction/@id', function($id){ (new \\controllers\\TransactionController())-\u003eshowForm('transaction', $id); });
+Flight::route('GET /transaction/edit/recurring/@id', function($id){ (new \\controllers\\TransactionController())-\u003eshowForm('recurring', $id); });
 
 // Unified save and delete routes
 Flight::route('POST /transaction/save', function(){ (new \controllers\TransactionController())->save(); });
